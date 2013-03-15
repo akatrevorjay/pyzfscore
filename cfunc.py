@@ -1,3 +1,8 @@
+#
+# Based on http://code.activestate.com/recipes/576731-c-function-decorator/
+#
+
+
 import ctypes
 
 

@@ -1,3 +1,7 @@
+#
+# Based on http://code.activestate.com/recipes/576415-ctype-enumeration-class/
+#
+
 
 from ctypes import *
 

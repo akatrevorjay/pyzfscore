@@ -1,3 +1,8 @@
+#
+# Based on http://code.activestate.com/recipes/576734/
+#
+
+
 import ctypes
 
 
