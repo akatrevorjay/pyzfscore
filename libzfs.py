@@ -3,7 +3,6 @@
 # He has okayed an LGPL license on it. Thanks!
 #
 
-
 import ctypes as C
 from ctypes import *
 

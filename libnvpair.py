@@ -1,4 +1,9 @@
 #
+# From imp's zfsrest repo, which is what got this whole
+# thing started: https://github.com/imp/zfsrest
+# He has okayed an LGPL license on it. Thanks!
+#
+#
 # Copyright 2011 Grigale Ltd. All rights reserved.
 # Use is subject to license terms.
 #
