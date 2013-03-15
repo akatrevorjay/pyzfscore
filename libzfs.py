@@ -178,6 +178,7 @@ zpool_get_handle = _cmeth_bakery(
     restype=libzfs_handle_ptr,
 )
 
+
 # libzfs_handle_t *zfs_get_handle(zfs_handle_t *);
 zfs_get_handle = _cmeth_bakery(
     lz.zfs_get_handle,
