@@ -4,6 +4,7 @@
 from _cffi import ffi
 import libzfs
 
+
 LZH = libzfs.libzfs_init()
 
 
@@ -12,11 +13,6 @@ class _ZBase(object):
 
     _lzh = LZH
     name = None
-
-    #def __init__(self, _lzh=None):
-    #    self._lzh = _lzh
-    #    if not self._lzh:
-    #        self._lzh = libzfs.libzfs_init()
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self.name)
@@ -32,6 +28,7 @@ class ZDataset(_ZBase):
 
     @classmethod
     def from_handle(cls, handle):
+        # TODO find type on init of ZDataset from_handle and use proper subclass
         self = cls()
         self._handle = handle
         self._load()
@@ -39,6 +36,33 @@ class ZDataset(_ZBase):
 
     def _load(self):
         self.name = libzfs.zfs_get_name(self._handle)
+
+    @classmethod
+    def _children_iterator(cls, func, args):
+        children = []
+
+        @ffi.callback('zfs_iter_f')
+        def _zfs_iter_cb(handle, arg=None):
+            c = cls.from_handle(handle)
+            children.append(c)
+            return 0
+
+        args.append(_zfs_iter_cb)
+        func(*args)
+        return children
+
+    @classmethod
+    def list(cls):
+        return cls._children_iterator(libzfs.zfs_iter_root, [cls._lzh])
+
+    def children(self):
+        return self._children_iterator(libzfs.zfs_iter_children, [self._handle])
+
+    def filesystems(self):
+        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle])
+
+    def snapshots_sorted(self):
+        return self._children_iterator(libzfs.zfs_iter_snapshots_sorted, [self._handle])
 
 
 class ZFilesystem(ZDataset):
@@ -55,9 +79,6 @@ class ZVolume(ZDataset):
 
 class ZPool(_ZBase):
     _types_mask = 8
-
-    def __init__(self):
-        pass
 
     @classmethod
     def list(cls):
