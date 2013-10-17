@@ -60,6 +60,7 @@ class ZDataset(_ZBase):
             return 0
 
         args.append(_zfs_iter_cb)
+        # TODO instead of args would partials be better?
         func(*args)
         return children
 
