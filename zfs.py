@@ -27,9 +27,21 @@ class ZDataset(_ZBase):
         return cls.from_handle(handle)
 
     @classmethod
+    def _find_subclass_for_type_mask(cls, type_mask):
+        for scls in cls.__subclasses__():
+            if type_mask & scls._types_mask:
+                return scls
+        return cls
+
+    @classmethod
     def from_handle(cls, handle):
-        # TODO find type on init of ZDataset from_handle and use proper subclass
-        self = cls()
+        # Find type on init of ZDataset from_handle and use proper subclass
+        handle_type = libzfs.zfs_get_type(handle)
+        # TODO is there a way to trawl up mro to find the parent without
+        # specifying the hard class name here?
+        handle_cls = ZDataset._find_subclass_for_type_mask(handle_type) or cls
+
+        self = handle_cls()
         self._handle = handle
         self._load()
         return self
@@ -52,16 +64,18 @@ class ZDataset(_ZBase):
         return children
 
     @classmethod
-    def list(cls):
+    def iter_root(cls):
         return cls._children_iterator(libzfs.zfs_iter_root, [cls._lzh])
 
-    def children(self):
+    list = iter_root
+
+    def iter_children(self):
         return self._children_iterator(libzfs.zfs_iter_children, [self._handle])
 
-    def filesystems(self):
+    def iter_filesystems(self):
         return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle])
 
-    def snapshots_sorted(self):
+    def iter_snapshots_sorted(self):
         return self._children_iterator(libzfs.zfs_iter_snapshots_sorted, [self._handle])
 
 
@@ -81,7 +95,7 @@ class ZPool(_ZBase):
     _types_mask = 8
 
     @classmethod
-    def list(cls):
+    def iter(cls):
         pools = []
 
         @ffi.callback('zpool_iter_f')
@@ -92,6 +106,8 @@ class ZPool(_ZBase):
 
         libzfs.zpool_iter(cls._lzh, _zpool_iter_cb)
         return pools
+
+    list = iter
 
     @classmethod
     def from_handle(cls, handle):
@@ -108,4 +124,9 @@ class ZPool(_ZBase):
 
     def _load(self):
         self.name = libzfs.zpool_get_name(self._handle)
-        self.filesystem = ZFilesystem.open(self.name)
+        # TODO Check if dataset/pool exists and is active before doing this
+        # otherwise it segfaults
+        #self.filesystem = self.to_filesystem()
+
+    def to_filesystem(self):
+        return ZFilesystem.open(self.name)
