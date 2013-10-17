@@ -14,12 +14,20 @@ def print_zfh(zhp):
 
 @ffi.callback('zfs_iter_f')
 def _zfs_iter_cb(zhp, arg=None):
-    print "zhp=%s, arg=%s" % (zhp, ffi.from_handle(arg))
+    arg = ffi.from_handle(arg)
+    name = zfs_get_name(zhp)
+    print "%s: zhp=%s, arg=%s" % (name, zhp, arg)
+    #print_zfh(zhp)
 
-    print_zfh(zhp)
+    if arg != 'noiter':
+        #print "%s: Iterating through children" % name
+        #zfs_iter_children(zhp, _zfs_iter_cb)
 
-    print "Iterating through children"
-    zfs_iter_children(zhp, _zfs_iter_cb)
+        print "%s: Iterating through filesystems" % name
+        zfs_iter_filesystems(zhp, _zfs_iter_cb)
+
+        print "%s: Iterating through snapshots sorted" % name
+        zfs_iter_snapshots_sorted(zhp, _zfs_iter_cb, 'noiter')
 
     return 0
 
@@ -31,8 +39,9 @@ def print_zph(zhp):
 
 @ffi.callback('zpool_iter_f')
 def _zpool_iter_cb(zhp, arg=None):
-    print "zhp=%s, arg=%s" % (zhp, ffi.from_handle(arg))
-    print_zph(zhp)
+    name = zpool_get_name(zhp)
+    print "pool %s: zhp=%s, arg=%s" % (name, zhp, ffi.from_handle(arg))
+    #print_zph(zhp)
 
     #print "Iterating through root datasets"
     #zfs_iter_root(zhp, _zfs_iter_cb, arg=None)

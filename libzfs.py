@@ -323,10 +323,11 @@ def zfs_close(zhp):
     return czfs.zfs_close(zhp)
 
 
+# TODO Easify types_mask according to enum zfs_type_t in sys/fs/zfs.h
 @cdef('zfs_handle_t *zfs_open(libzfs_handle_t *, const char *, int);')
-def zfs_open(zhp, name, arg=0):
+def zfs_open(zhp, name, types_mask=15):
     """Gets zfs_handle for dataset"""
-    return ffi.gc(czfs.zfs_open(zhp, name, arg), zfs_close)
+    return ffi.gc(czfs.zfs_open(zhp, name, types_mask), zfs_close)
 
 
 #@cdef('zfs_type_t zfs_get_type(const zfs_handle_t *);')
