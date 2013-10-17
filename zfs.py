@@ -39,7 +39,7 @@ class ZDataset(_ZBase):
         handle_type = libzfs.zfs_get_type(handle)
         # TODO is there a way to trawl up mro to find the parent without
         # specifying the hard class name here?
-        handle_cls = ZDataset._find_subclass_for_type_mask(handle_type) or cls
+        handle_cls = ZDataset._find_subclass_for_type_mask(handle_type)
 
         self = handle_cls()
         self._handle = handle
