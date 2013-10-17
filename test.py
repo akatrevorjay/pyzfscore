@@ -1,11 +1,13 @@
 
 import libzfs
 from libzfs import *
+import zfs
+from zfs import *
 
 
-lzh = libzfs_init()
-zph = zpool_open(lzh, 'bpool')
-print "lzh=%s zph=%s" % (lzh, zph)
+#lzh = libzfs_init()
+#zph = zpool_open(lzh, 'bpool')
+#print "lzh=%s zph=%s" % (lzh, zph)
 
 
 def print_zfh(zhp):
@@ -49,16 +51,43 @@ def _zpool_iter_cb(zhp, arg=None):
     return 0
 
 
-print
-print "Iterating through pools arg=None"
-zpool_iter(lzh, _zpool_iter_cb)
+#print
+#print "Iterating through pools arg=None"
+#zpool_iter(lzh, _zpool_iter_cb)
+
+#print
+#print "Iterating through pools arg=0"
+#zpool_iter(lzh, _zpool_iter_cb, 0)
+
+
+#print
+#print "Iterating through root datasets"
+#zfs_iter_root(lzh, _zfs_iter_cb)
+
 
 print
-print "Iterating through pools arg=0"
-zpool_iter(lzh, _zpool_iter_cb, 0)
+print "OO Iterating through pools"
 
+pools = ZPool.list()
+print pools
+
+#for p in pools:
+#    pf = p.to_filesystem()
 
 print
-print "Iterating through root datasets"
-zfs_iter_root(lzh, _zfs_iter_cb)
+print "OO Iterating through datasets"
+
+datasets = ZDataset.iter_root()
+print datasets
+
+for dataset in datasets:
+    print "%s: Iterating children" % dataset
+    print dataset.iter_children()
+
+    print "%s: Iterating filesystems" % dataset
+    print dataset.iter_filesystems()
+
+    print "%s: Iterating snapshots sorted" % dataset
+    print dataset.iter_snapshots_sorted()
+
 
