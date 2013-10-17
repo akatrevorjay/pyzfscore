@@ -42,6 +42,7 @@ class ZDataset(_ZBase):
         handle_cls = ZDataset._find_subclass_for_type_mask(handle_type)
 
         self = handle_cls()
+        #self._lzh = libzfs.zfs_get_handle(handle)
         self._handle = handle
         self._load()
         return self
