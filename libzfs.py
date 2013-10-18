@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 
 from _cffi import czfs, czpool, cnvpair, ptop, cdef, ffi
+from flufl.enum import IntEnum
 
 
-class Enumeration(object):
-    pass
-
-
-class libzfs_errors(Enumeration):
-    #_members_start_ = 2000
-    #_members_ = []
+class libzfs_errors(IntEnum):
     EZFS_NOMEM = 2000  # Out of memory
     EZFS_BADPROP = 2001  # Invalid property value
     EZFS_PROPREADONLY = 2002  # cannot set readonly property
@@ -84,7 +79,7 @@ class libzfs_errors(Enumeration):
     EZFS_UNKNOWN = 2071
 
 
-class zfs_type_t(Enumeration):
+class zfs_type_t(IntEnum):
     """ Each dataset can be one of the following types.  These constants can be
     combined into masks that can be passed to various functions. """
     ZFS_TYPE_FILESYSTEM = 1
@@ -93,7 +88,7 @@ class zfs_type_t(Enumeration):
     ZFS_TYPE_POOL = 8
 
 
-class zfs_prop_t(Enumeration):
+class zfs_prop_t(IntEnum):
     ZFS_NUM_PROPS = 63
     ZFS_PROP_ACLINHERIT = 25
     ZFS_PROP_ATIME = 17
@@ -160,7 +155,7 @@ class zfs_prop_t(Enumeration):
     ZFS_PROP_ZONED = 22
 
 
-class zfs_userquota_prop_t(Enumeration):
+class zfs_userquota_prop_t(IntEnum):
     ZFS_PROP_USERUSED = 0
     ZFS_PROP_USERQUOTA = 1
     ZFS_PROP_GROUPUSED = 2
@@ -168,7 +163,7 @@ class zfs_userquota_prop_t(Enumeration):
     ZFS_NUM_USERQUOTA_PROPS = 4
 
 
-class zpool_prop_t(Enumeration):
+class zpool_prop_t(IntEnum):
     ZPOOL_PROP_NAME = 0
     ZPOOL_PROP_SIZE = 1
     ZPOOL_PROP_CAPACITY = 2
@@ -195,7 +190,7 @@ class zpool_prop_t(Enumeration):
     ZPOOL_NUM_PROPS = 23
 
 
-class zprop_source_t(Enumeration):
+class zprop_source_t(IntEnum):
     ZPROP_SRC_NONE = 0x1
     ZPROP_SRC_DEFAULT = 0x2
     ZPROP_SRC_TEMPORARY = 0x4
@@ -204,50 +199,49 @@ class zprop_source_t(Enumeration):
     ZPROP_SRC_RECEIVED = 0x20
 
 
-class zpool_status_t(Enumeration):
-    _members_ = [
-        # The following correspond to faults as defined in the (fault.fs.zfs.)
-        # event namespace.  Each is associated with a corresponding message ID.
-        'ZPOOL_STATUS_CORRUPT_CACHE',    # corrupt /kernel/drv/zpool.cache
-        'ZPOOL_STATUS_MISSING_DEV_R',    # missing device with replicas
-        'ZPOOL_STATUS_MISSING_DEV_NR',    # missing device with no replicas
-        'ZPOOL_STATUS_CORRUPT_LABEL_R',    # bad device label with replicas
-        'ZPOOL_STATUS_CORRUPT_LABEL_NR',    # bad device label with no replicas
-        'ZPOOL_STATUS_BAD_GUID_SUM',    # sum of device guids didn't match
-        'ZPOOL_STATUS_CORRUPT_POOL',    # pool metadata is corrupted
-        'ZPOOL_STATUS_CORRUPT_DATA',    # data errors in user (meta)data
-        'ZPOOL_STATUS_FAILING_DEV',    # device experiencing errors
-        'ZPOOL_STATUS_VERSION_NEWER',    # newer on-disk version
-        'ZPOOL_STATUS_HOSTID_MISMATCH',    # last accessed by another system
-        'ZPOOL_STATUS_IO_FAILURE_WAIT',    # failed I/O, failmode 'wait'
-        'ZPOOL_STATUS_IO_FAILURE_CONTINUE',  # failed I/O, failmode 'continue'
-        'ZPOOL_STATUS_BAD_LOG',        # cannot read log chain(s)
+zpool_status_t = IntEnum('zpool_status_t', [
+    # The following correspond to faults as defined in the (fault.fs.zfs.)
+    # event namespace.  Each is associated with a corresponding message ID.
+    'ZPOOL_STATUS_CORRUPT_CACHE',    # corrupt /kernel/drv/zpool.cache
+    'ZPOOL_STATUS_MISSING_DEV_R',    # missing device with replicas
+    'ZPOOL_STATUS_MISSING_DEV_NR',    # missing device with no replicas
+    'ZPOOL_STATUS_CORRUPT_LABEL_R',    # bad device label with replicas
+    'ZPOOL_STATUS_CORRUPT_LABEL_NR',    # bad device label with no replicas
+    'ZPOOL_STATUS_BAD_GUID_SUM',    # sum of device guids didn't match
+    'ZPOOL_STATUS_CORRUPT_POOL',    # pool metadata is corrupted
+    'ZPOOL_STATUS_CORRUPT_DATA',    # data errors in user (meta)data
+    'ZPOOL_STATUS_FAILING_DEV',    # device experiencing errors
+    'ZPOOL_STATUS_VERSION_NEWER',    # newer on-disk version
+    'ZPOOL_STATUS_HOSTID_MISMATCH',    # last accessed by another system
+    'ZPOOL_STATUS_IO_FAILURE_WAIT',    # failed I/O, failmode 'wait'
+    'ZPOOL_STATUS_IO_FAILURE_CONTINUE',  # failed I/O, failmode 'continue'
+    'ZPOOL_STATUS_BAD_LOG',        # cannot read log chain(s)
 
-        # If the pool has unsupported features but can still be opened in
-        # read-only mode, its status is ZPOOL_STATUS_UNSUP_FEAT_WRITE. If the
-        # pool has unsupported features but cannot be opened at all, its
-        # status is ZPOOL_STATUS_UNSUP_FEAT_READ.
-        'ZPOOL_STATUS_UNSUP_FEAT_READ',    # unsupported features for read
-        'ZPOOL_STATUS_UNSUP_FEAT_WRITE',    # unsupported features for write
+    # If the pool has unsupported features but can still be opened in
+    # read-only mode, its status is ZPOOL_STATUS_UNSUP_FEAT_WRITE. If the
+    # pool has unsupported features but cannot be opened at all, its
+    # status is ZPOOL_STATUS_UNSUP_FEAT_READ.
+    'ZPOOL_STATUS_UNSUP_FEAT_READ',    # unsupported features for read
+    'ZPOOL_STATUS_UNSUP_FEAT_WRITE',    # unsupported features for write
 
-        # These faults have no corresponding message ID.  At the time we are
-        # checking the status, the original reason for the FMA fault (I/O or
-        # checksum errors) has been lost.
-        'ZPOOL_STATUS_FAULTED_DEV_R',    # faulted device with replicas
-        'ZPOOL_STATUS_FAULTED_DEV_NR',    # faulted device with no replicas
+    # These faults have no corresponding message ID.  At the time we are
+    # checking the status, the original reason for the FMA fault (I/O or
+    # checksum errors) has been lost.
+    'ZPOOL_STATUS_FAULTED_DEV_R',    # faulted device with replicas
+    'ZPOOL_STATUS_FAULTED_DEV_NR',    # faulted device with no replicas
 
-        # The following are not faults per se, but still an error possibly
-        # requiring administrative attention.  There is no corresponding
-        # message ID.
-        'ZPOOL_STATUS_VERSION_OLDER',    # older legacy on-disk version
-        'ZPOOL_STATUS_FEAT_DISABLED',    # supported features are disabled
-        'ZPOOL_STATUS_RESILVERING',    # device being resilvered
-        'ZPOOL_STATUS_OFFLINE_DEV',    # device online
-        'ZPOOL_STATUS_REMOVED_DEV',    # removed device
+    # The following are not faults per se, but still an error possibly
+    # requiring administrative attention.  There is no corresponding
+    # message ID.
+    'ZPOOL_STATUS_VERSION_OLDER',    # older legacy on-disk version
+    'ZPOOL_STATUS_FEAT_DISABLED',    # supported features are disabled
+    'ZPOOL_STATUS_RESILVERING',    # device being resilvered
+    'ZPOOL_STATUS_OFFLINE_DEV',    # device online
+    'ZPOOL_STATUS_REMOVED_DEV',    # removed device
 
-        # Finally, the following indicates a healthy pool.
-        'ZPOOL_STATUS_OK',
-    ]
+    # Finally, the following indicates a healthy pool.
+    'ZPOOL_STATUS_OK',
+    ], start=0)
 
 
 """ Start """
@@ -583,7 +577,7 @@ def zfs_open(zhp, name, types_mask=15):
 @cdef('int zfs_get_type(const zfs_handle_t *);')
 def zfs_get_type(zhp):
     """Gets type for zfs_handle"""
-    return czfs.zfs_get_type(zhp)
+    return zfs_type_t[czfs.zfs_get_type(zhp)]
 
 
 @cdef('const char *zfs_get_name(const zfs_handle_t *);')

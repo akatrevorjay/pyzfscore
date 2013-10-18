@@ -9,7 +9,7 @@ LZH = libzfs.libzfs_init()
 
 
 class _ZBase(object):
-    _types_mask = 1 + 2 + 4 + 8
+    _types_mask = sum(libzfs.zfs_type_t)
 
     _lzh = LZH
     name = None
@@ -19,7 +19,7 @@ class _ZBase(object):
 
 
 class ZDataset(_ZBase):
-    _types_mask = 1 + 2 + 4
+    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_FILESYSTEM | libzfs.zfs_type_t.ZFS_TYPE_SNAPSHOT | libzfs.zfs_type_t.ZFS_TYPE_VOLUME
 
     @classmethod
     def open(cls, name):
@@ -82,19 +82,19 @@ class ZDataset(_ZBase):
 
 
 class ZFilesystem(ZDataset):
-    _types_mask = 1
+    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_FILESYSTEM
 
 
 class ZSnapshot(ZDataset):
-    _types_mask = 2
+    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_SNAPSHOT
 
 
 class ZVolume(ZDataset):
-    _types_mask = 4
+    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_VOLUME
 
 
 class ZPool(_ZBase):
-    _types_mask = 8
+    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_POOL
 
     @classmethod
     def iter(cls):
