@@ -567,9 +567,8 @@ def zfs_close(zhp):
     return czfs.zfs_close(zhp)
 
 
-# TODO Easify types_mask according to enum zfs_type_t in sys/fs/zfs.h
 @cdef('zfs_handle_t *zfs_open(libzfs_handle_t *, const char *, int);')
-def zfs_open(zhp, name, types_mask=15):
+def zfs_open(zhp, name, types_mask=sum(zfs_type_t)):
     """Gets zfs_handle for dataset"""
     return ffi.gc(czfs.zfs_open(zhp, name, types_mask), zfs_close)
 
@@ -650,17 +649,11 @@ typedef struct zprop_list {
 
 extern int zfs_expand_proplist(zfs_handle_t *, zprop_list_t **, boolean_t);
 extern void zfs_prune_proplist(zfs_handle_t *, uint8_t *);
+'''
 
-#define	ZFS_MOUNTPOINT_NONE	"none"
-#define	ZFS_MOUNTPOINT_LEGACY	"legacy"
 
-#define	ZFS_FEATURE_DISABLED	"disabled"
-#define	ZFS_FEATURE_ENABLED	"enabled"
-#define	ZFS_FEATURE_ACTIVE	"active"
 
-#define	ZFS_UNSUPPORTED_INACTIVE	"inactive"
-#define	ZFS_UNSUPPORTED_READONLY	"readonly"
-
+'''
 /*
  * zpool property management
  */
@@ -671,7 +664,9 @@ extern const char *zpool_prop_default_string(zpool_prop_t);
 extern uint64_t zpool_prop_default_numeric(zpool_prop_t);
 extern const char *zpool_prop_column_name(zpool_prop_t);
 extern boolean_t zpool_prop_align_right(zpool_prop_t);
+'''
 
+'''
 /*
  * Functions shared by zfs and zpool property management.
  */
