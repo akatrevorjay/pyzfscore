@@ -80,6 +80,10 @@ class ZDataset(_ZBase):
     def iter_snapshots_sorted(self):
         return self._children_iterator(libzfs.zfs_iter_snapshots_sorted, [self._handle])
 
+    def to_pool(self):
+        handle = libzfs.zfs_get_pool_handle(self._handle)
+        return ZPool.from_handle(handle)
+
 
 class ZFilesystem(ZDataset):
     _types_mask = libzfs.zfs_type_t.ZFS_TYPE_FILESYSTEM
