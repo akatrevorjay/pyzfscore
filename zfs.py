@@ -84,6 +84,9 @@ class ZDataset(_ZBase):
         handle = libzfs.zfs_get_pool_handle(self._handle)
         return ZPool.from_handle(handle)
 
+    def destroy(self, defer=True):
+        return libzfs.zfs_destroy(self._handle, defer)
+
 
 class ZFilesystem(ZDataset):
     _types_mask = libzfs.zfs_type_t.ZFS_TYPE_FILESYSTEM
