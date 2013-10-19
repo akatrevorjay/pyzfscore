@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 
-from _cffi import ffi
-import libzfs
+from ._cffi import ffi
+from . import libzfs
 
 
 LZH = libzfs.libzfs_init()
