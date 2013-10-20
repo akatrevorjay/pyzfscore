@@ -3,13 +3,14 @@
 
 from ._cffi import ffi
 from . import libzfs
+from .libzfs import zfs_type_t
 
 
 LZH = libzfs.libzfs_init()
 
 
 class _ZBase(object):
-    _types_mask = sum(libzfs.zfs_type_t)
+    _zfs_type_mask = zfs_type_t.ALL
 
     _lzh = LZH
     name = None
@@ -19,17 +20,17 @@ class _ZBase(object):
 
 
 class ZDataset(_ZBase):
-    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_FILESYSTEM | libzfs.zfs_type_t.ZFS_TYPE_SNAPSHOT | libzfs.zfs_type_t.ZFS_TYPE_VOLUME
+    _zfs_type_mask = zfs_type_t.DATASET
 
     @classmethod
     def open(cls, name):
-        handle = libzfs.zfs_open(cls._lzh, name, cls._types_mask)
+        handle = libzfs.zfs_open(cls._lzh, name, cls._zfs_type_mask)
         return cls.from_handle(handle)
 
     @classmethod
     def _find_subclass_for_type_mask(cls, type_mask):
         for scls in cls.__subclasses__():
-            if type_mask & scls._types_mask:
+            if type_mask & scls._zfs_type_mask:
                 return scls
         return cls
 
@@ -42,13 +43,9 @@ class ZDataset(_ZBase):
         handle_cls = ZDataset._find_subclass_for_type_mask(handle_type)
 
         self = handle_cls()
-        #self._lzh = libzfs.zfs_get_handle(handle)
         self._handle = handle
         self._load()
         return self
-
-    def _load(self):
-        self.name = libzfs.zfs_get_name(self._handle)
 
     @classmethod
     def _children_iterator(cls, func, args):
@@ -71,6 +68,12 @@ class ZDataset(_ZBase):
 
     list = iter_root
 
+    def _get_libzfs_handle(self):
+        return libzfs.zfs_get_handle(self._handle)
+
+    def _load(self):
+        self.name = libzfs.zfs_get_name(self._handle)
+
     def iter_children(self):
         return self._children_iterator(libzfs.zfs_iter_children, [self._handle])
 
@@ -89,19 +92,19 @@ class ZDataset(_ZBase):
 
 
 class ZFilesystem(ZDataset):
-    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_FILESYSTEM
+    _zfs_type_mask = zfs_type_t.ZFS_TYPE_FILESYSTEM
 
 
 class ZSnapshot(ZDataset):
-    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_SNAPSHOT
+    _zfs_type_mask = zfs_type_t.ZFS_TYPE_SNAPSHOT
 
 
 class ZVolume(ZDataset):
-    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_VOLUME
+    _zfs_type_mask = zfs_type_t.ZFS_TYPE_VOLUME
 
 
 class ZPool(_ZBase):
-    _types_mask = libzfs.zfs_type_t.ZFS_TYPE_POOL
+    _zfs_type_mask = zfs_type_t.ZFS_TYPE_POOL
 
     @classmethod
     def iter(cls):
@@ -121,7 +124,6 @@ class ZPool(_ZBase):
     @classmethod
     def from_handle(cls, handle):
         self = cls()
-        #self._lzh = libzfs.zpool_get_handle(handle)
         self._handle = handle
         self._load()
         return self
@@ -131,11 +133,22 @@ class ZPool(_ZBase):
         handle = libzfs.zpool_open(cls._lzh, name)
         return cls.from_handle(handle)
 
+    def _get_libzfs_handle(self):
+        return libzfs.zpool_get_handle(self._handle)
+
     def _load(self):
         self.name = libzfs.zpool_get_name(self._handle)
-        # TODO Check if dataset/pool exists and is active before doing this
-        # otherwise it segfaults
-        #self.filesystem = self.to_filesystem()
+        self.active = self._is_active()
+        if self.active:
+            self.filesystem = self._to_filesystem()
+            self.state = self._get_state()
 
-    def to_filesystem(self):
+    def _is_active(self):
+        return self._get_state() == 'ACTIVE'
+
+    def _to_filesystem(self):
         return ZFilesystem.open(self.name)
+
+    def _get_state(self):
+        pool_state = libzfs.zpool_get_state(self._handle)
+        return libzfs.zpool_pool_state_to_name(pool_state)
