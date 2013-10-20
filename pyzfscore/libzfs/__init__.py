@@ -3,8 +3,10 @@
 from .._cffi import czfs, czpool, cnvpair, ptop, cdef, ffi
 
 from .consts import libzfs_errors, \
+        zprop_source_t, \
         zfs_prop_t, zfs_type_t, zfs_userquota_prop_t, \
         zpool_prop_t, zpool_status_t, \
+        pool_state_t, \
         boolean_t
 
 
@@ -60,6 +62,27 @@ def zfs_get_handle(zhp):
     return czfs.zpool_get_handle(zhp)
 
 
+@cdef('void libzfs_print_on_error(libzfs_handle_t *, boolean_t);')
+def libzfs_print_on_error(zhp, value=True):
+    value = ffi.cast('boolean_t', value)
+    return czfs.libzfs_print_on_error(zhp, value)
+
+
+@cdef('int libzfs_errno(libzfs_handle_t *);')
+def libzfs_errno(zhp):
+    return czfs.libzfs_errno(zhp)
+
+
+@cdef('const char *libzfs_error_action(libzfs_handle_t *);')
+def libzfs_error_action(zhp):
+    return ffi.string(czfs.libzfs_error_action(zhp))
+
+
+@cdef('const char *libzfs_error_description(libzfs_handle_t *);')
+def libzfs_error_description(zhp):
+    return ffi.string(czfs.libzfs_error_description(zhp))
+
+
 """ Basic handle functions """
 
 '''
@@ -98,17 +121,25 @@ def zpool_get_name(zhp):
 @cdef('int zpool_get_state(zpool_handle_t *);')
 def zpool_get_state(zhp):
     """Returns state for zpool_handle"""
-    return czfs.zpool_get_state(zhp)
+    state = czfs.zpool_get_state(zhp)
+    return pool_state_t[state]
 
 
-#@cdef('char *zpool_state_to_name(vdev_state_t, vdev_aux_t);')
-#def zpool_state_to_name(vdev_state, vdev_aux):
-#    return czfs.zpool_state_to_name(vdev_state, vdev_aux)
+@cdef('char *zpool_state_to_name(vdev_state_t, vdev_aux_t);')
+def zpool_state_to_name(vdev_state, vdev_aux):
+    """Map VDEV STATE to printed strings."""
+    return ffi.string(czfs.zpool_state_to_name(vdev_state, vdev_aux))
 
 
-#@cdef('const char *zpool_pool_state_to_name(pool_state_t);')
-#def zpool_pool_state_to_name(pool_state):
-#    return czfs.zpool_pool_state_to_name(pool_state)
+@cdef('const char *zpool_pool_state_to_name(pool_state_t);')
+def zpool_pool_state_to_name(pool_state):
+    """Map POOL STATE to printed strings."""
+    return ffi.string(czfs.zpool_pool_state_to_name(pool_state))
+
+
+@cdef('void zpool_free_handles(libzfs_handle_t *);')
+def zpool_free_handles(zhp):
+    return czfs.zpool_free_handles(zhp)
 
 
 """ Iterate over all active pools in the system """
