@@ -78,169 +78,176 @@ class libzfs_errors(IntEnum):
     EZFS_UNKNOWN = 2071
 
 
-class zfs_type_t(IntEnum):
-    """ Each dataset can be one of the following types.  These constants can be
-    combined into masks that can be passed to various functions. """
-    ZFS_TYPE_FILESYSTEM = 1
-    ZFS_TYPE_SNAPSHOT = 2
-    ZFS_TYPE_VOLUME = 4
-    ZFS_TYPE_POOL = 8
+zfs_prop_t = IntEnum('zfs_prop_t', [
+	'ZFS_PROP_TYPE',
+	'ZFS_PROP_CREATION',
+	'ZFS_PROP_USED',
+	'ZFS_PROP_AVAILABLE',
+	'ZFS_PROP_REFERENCED',
+	'ZFS_PROP_COMPRESSRATIO',
+	'ZFS_PROP_MOUNTED',
+	'ZFS_PROP_ORIGIN',
+	'ZFS_PROP_QUOTA',
+	'ZFS_PROP_RESERVATION',
+	'ZFS_PROP_VOLSIZE',
+	'ZFS_PROP_VOLBLOCKSIZE',
+	'ZFS_PROP_RECORDSIZE',
+	'ZFS_PROP_MOUNTPOINT',
+	'ZFS_PROP_SHARENFS',
+	'ZFS_PROP_CHECKSUM',
+	'ZFS_PROP_COMPRESSION',
+	'ZFS_PROP_ATIME',
+	'ZFS_PROP_DEVICES',
+	'ZFS_PROP_EXEC',
+	'ZFS_PROP_SETUID',
+	'ZFS_PROP_READONLY',
+	'ZFS_PROP_ZONED',
+	'ZFS_PROP_SNAPDIR',
+	'ZFS_PROP_PRIVATE',		# not exposed to user, temporary
+	'ZFS_PROP_ACLINHERIT',
+	'ZFS_PROP_CREATETXG',		# not exposed to the user
+	'ZFS_PROP_NAME',			# not exposed to the user
+	'ZFS_PROP_CANMOUNT',
+	'ZFS_PROP_ISCSIOPTIONS',		# not exposed to the user
+	'ZFS_PROP_XATTR',
+	'ZFS_PROP_NUMCLONES',		# not exposed to the user
+	'ZFS_PROP_COPIES',
+	'ZFS_PROP_VERSION',
+	'ZFS_PROP_UTF8ONLY',
+	'ZFS_PROP_NORMALIZE',
+	'ZFS_PROP_CASE',
+	'ZFS_PROP_VSCAN',
+	'ZFS_PROP_NBMAND',
+	'ZFS_PROP_SHARESMB',
+	'ZFS_PROP_REFQUOTA',
+	'ZFS_PROP_REFRESERVATION',
+	'ZFS_PROP_GUID',
+	'ZFS_PROP_PRIMARYCACHE',
+	'ZFS_PROP_SECONDARYCACHE',
+	'ZFS_PROP_USEDSNAP',
+	'ZFS_PROP_USEDDS',
+	'ZFS_PROP_USEDCHILD',
+	'ZFS_PROP_USEDREFRESERV',
+	'ZFS_PROP_USERACCOUNTING',	# not exposed to the user
+	'ZFS_PROP_STMF_SHAREINFO',	# not exposed to the user
+	'ZFS_PROP_DEFER_DESTROY',
+	'ZFS_PROP_USERREFS',
+	'ZFS_PROP_LOGBIAS',
+	'ZFS_PROP_UNIQUE',		# not exposed to the user
+	'ZFS_PROP_OBJSETID',		# not exposed to the user
+	'ZFS_PROP_DEDUP',
+	'ZFS_PROP_MLSLABEL',
+	'ZFS_PROP_SYNC',
+	'ZFS_PROP_REFRATIO',
+	'ZFS_PROP_WRITTEN',
+	'ZFS_PROP_CLONES',
+	'ZFS_PROP_SNAPDEV',
+	'ZFS_NUM_PROPS',
+], start=0)
 
 
-class zfs_prop_t(IntEnum):
-    ZFS_NUM_PROPS = 63
-    ZFS_PROP_ACLINHERIT = 25
-    ZFS_PROP_ATIME = 17
-    ZFS_PROP_AVAILABLE = 3
-    ZFS_PROP_CANMOUNT = 28
-    ZFS_PROP_CASE = 36
-    ZFS_PROP_CHECKSUM = 15
-    ZFS_PROP_CLONES = 61
-    ZFS_PROP_COMPRESSION = 16
-    ZFS_PROP_COMPRESSRATIO = 5
-    ZFS_PROP_COPIES = 32
-    ZFS_PROP_CREATETXG = 26
-    ZFS_PROP_CREATION = 1
-    ZFS_PROP_DEDUP = 56
-    ZFS_PROP_DEFER_DESTROY = 51
-    ZFS_PROP_DEVICES = 18
-    ZFS_PROP_EXEC = 19
-    ZFS_PROP_GUID = 42
-    ZFS_PROP_ISCSIOPTIONS = 29
-    ZFS_PROP_LOGBIAS = 53
-    ZFS_PROP_MLSLABEL = 57
-    ZFS_PROP_MOUNTED = 6
-    ZFS_PROP_MOUNTPOINT = 13
-    ZFS_PROP_NAME = 27
-    ZFS_PROP_NBMAND = 38
-    ZFS_PROP_NORMALIZE = 35
-    ZFS_PROP_NUMCLONES = 31
-    ZFS_PROP_OBJSETID = 55
-    ZFS_PROP_ORIGIN = 7
-    ZFS_PROP_PRIMARYCACHE = 43
-    ZFS_PROP_PRIVATE = 24
-    ZFS_PROP_QUOTA = 8
-    ZFS_PROP_READONLY = 21
-    ZFS_PROP_RECORDSIZE = 12
-    ZFS_PROP_REFERENCED = 4
-    ZFS_PROP_REFQUOTA = 40
-    ZFS_PROP_REFRATIO = 59
-    ZFS_PROP_REFRESERVATION = 41
-    ZFS_PROP_RESERVATION = 9
-    ZFS_PROP_SECONDARYCACHE = 44
-    ZFS_PROP_SETUID = 20
-    ZFS_PROP_SHARENFS = 14
-    ZFS_PROP_SHARESMB = 39
-    ZFS_PROP_SNAPDEV = 62
-    ZFS_PROP_SNAPDIR = 23
-    ZFS_PROP_STMF_SHAREINFO = 50
-    ZFS_PROP_SYNC = 58
-    ZFS_PROP_TYPE = 0
-    ZFS_PROP_UNIQUE = 54
-    ZFS_PROP_USED = 2
-    ZFS_PROP_USEDCHILD = 47
-    ZFS_PROP_USEDDS = 46
-    ZFS_PROP_USEDREFRESERV = 48
-    ZFS_PROP_USEDSNAP = 45
-    ZFS_PROP_USERACCOUNTING = 49
-    ZFS_PROP_USERREFS = 52
-    ZFS_PROP_UTF8ONLY = 34
-    ZFS_PROP_VERSION = 33
-    ZFS_PROP_VOLBLOCKSIZE = 11
-    ZFS_PROP_VOLSIZE = 10
-    ZFS_PROP_VSCAN = 37
-    ZFS_PROP_WRITTEN = 60
-    ZFS_PROP_XATTR = 30
-    ZFS_PROP_ZONED = 22
+zfs_userquota_prop_t = IntEnum('zfs_userquota_prop_t', [
+    'ZFS_PROP_USERUSED',
+    'ZFS_PROP_USERQUOTA',
+    'ZFS_PROP_GROUPUSED',
+    'ZFS_PROP_GROUPQUOTA',
+    'ZFS_NUM_USERQUOTA_PROPS',
+], start=0)
 
 
-class zfs_userquota_prop_t(IntEnum):
-    ZFS_PROP_USERUSED = 0
-    ZFS_PROP_USERQUOTA = 1
-    ZFS_PROP_GROUPUSED = 2
-    ZFS_PROP_GROUPQUOTA = 3
-    ZFS_NUM_USERQUOTA_PROPS = 4
-
-
-class zpool_prop_t(IntEnum):
-    ZPOOL_PROP_NAME = 0
-    ZPOOL_PROP_SIZE = 1
-    ZPOOL_PROP_CAPACITY = 2
-    ZPOOL_PROP_ALTROOT = 3
-    ZPOOL_PROP_HEALTH = 4
-    ZPOOL_PROP_GUID = 5
-    ZPOOL_PROP_VERSION = 6
-    ZPOOL_PROP_BOOTFS = 7
-    ZPOOL_PROP_DELEGATION = 8
-    ZPOOL_PROP_AUTOREPLACE = 9
-    ZPOOL_PROP_CACHEFILE = 10
-    ZPOOL_PROP_FAILUREMODE = 11
-    ZPOOL_PROP_LISTSNAPS = 12
-    ZPOOL_PROP_AUTOEXPAND = 13
-    ZPOOL_PROP_DEDUPDITTO = 14
-    ZPOOL_PROP_DEDUPRATIO = 15
-    ZPOOL_PROP_FREE = 16
-    ZPOOL_PROP_ALLOCATED = 17
-    ZPOOL_PROP_READONLY = 18
-    ZPOOL_PROP_ASHIFT = 19
-    ZPOOL_PROP_COMMENT = 20
-    ZPOOL_PROP_EXPANDSZ = 21
-    ZPOOL_PROP_FREEING = 22
-    ZPOOL_NUM_PROPS = 23
+zpool_prop_t = IntEnum('zpool_prop_t', [
+	'ZPOOL_PROP_NAME',
+	'ZPOOL_PROP_SIZE',
+	'ZPOOL_PROP_CAPACITY',
+	'ZPOOL_PROP_ALTROOT',
+	'ZPOOL_PROP_HEALTH',
+	'ZPOOL_PROP_GUID',
+	'ZPOOL_PROP_VERSION',
+	'ZPOOL_PROP_BOOTFS',
+	'ZPOOL_PROP_DELEGATION',
+	'ZPOOL_PROP_AUTOREPLACE',
+	'ZPOOL_PROP_CACHEFILE',
+	'ZPOOL_PROP_FAILUREMODE',
+	'ZPOOL_PROP_LISTSNAPS',
+	'ZPOOL_PROP_AUTOEXPAND',
+	'ZPOOL_PROP_DEDUPDITTO',
+	'ZPOOL_PROP_DEDUPRATIO',
+	'ZPOOL_PROP_FREE',
+	'ZPOOL_PROP_ALLOCATED',
+	'ZPOOL_PROP_READONLY',
+	'ZPOOL_PROP_ASHIFT',
+	'ZPOOL_PROP_COMMENT',
+	'ZPOOL_PROP_EXPANDSZ',
+	'ZPOOL_PROP_FREEING',
+	'ZPOOL_NUM_PROPS',
+], start=0)
 
 
 class zprop_source_t(IntEnum):
-    ZPROP_SRC_NONE = 0x1
-    ZPROP_SRC_DEFAULT = 0x2
-    ZPROP_SRC_TEMPORARY = 0x4
-    ZPROP_SRC_LOCAL = 0x8
-    ZPROP_SRC_INHERITED = 0x10
-    ZPROP_SRC_RECEIVED = 0x20
+	ZPROP_SRC_NONE = 0x1
+	ZPROP_SRC_DEFAULT = 0x2
+	ZPROP_SRC_TEMPORARY = 0x4
+	ZPROP_SRC_LOCAL = 0x8
+	ZPROP_SRC_INHERITED = 0x10
+	ZPROP_SRC_RECEIVED = 0x20
 
 
 zpool_status_t = IntEnum('zpool_status_t', [
-    # The following correspond to faults as defined in the (fault.fs.zfs.)
-    # event namespace.  Each is associated with a corresponding message ID.
-    'ZPOOL_STATUS_CORRUPT_CACHE',    # corrupt /kernel/drv/zpool.cache
-    'ZPOOL_STATUS_MISSING_DEV_R',    # missing device with replicas
-    'ZPOOL_STATUS_MISSING_DEV_NR',    # missing device with no replicas
-    'ZPOOL_STATUS_CORRUPT_LABEL_R',    # bad device label with replicas
-    'ZPOOL_STATUS_CORRUPT_LABEL_NR',    # bad device label with no replicas
-    'ZPOOL_STATUS_BAD_GUID_SUM',    # sum of device guids didn't match
-    'ZPOOL_STATUS_CORRUPT_POOL',    # pool metadata is corrupted
-    'ZPOOL_STATUS_CORRUPT_DATA',    # data errors in user (meta)data
-    'ZPOOL_STATUS_FAILING_DEV',    # device experiencing errors
-    'ZPOOL_STATUS_VERSION_NEWER',    # newer on-disk version
-    'ZPOOL_STATUS_HOSTID_MISMATCH',    # last accessed by another system
-    'ZPOOL_STATUS_IO_FAILURE_WAIT',    # failed I/O, failmode 'wait'
-    'ZPOOL_STATUS_IO_FAILURE_CONTINUE',  # failed I/O, failmode 'continue'
-    'ZPOOL_STATUS_BAD_LOG',        # cannot read log chain(s)
+	# The following correspond to faults as defined in the (fault.fs.zfs.*)
+	# event namespace.  Each is associated with a corresponding message ID.
+	'ZPOOL_STATUS_CORRUPT_CACHE',	# corrupt /kernel/drv/zpool.cache
+	'ZPOOL_STATUS_MISSING_DEV_R',	# missing device with replicas
+	'ZPOOL_STATUS_MISSING_DEV_NR',	# missing device with no replicas
+	'ZPOOL_STATUS_CORRUPT_LABEL_R',	# bad device label with replicas
+	'ZPOOL_STATUS_CORRUPT_LABEL_NR',	# bad device label with no replicas
+	'ZPOOL_STATUS_BAD_GUID_SUM',	# sum of device guids didn't match
+	'ZPOOL_STATUS_CORRUPT_POOL',	# pool metadata is corrupted
+	'ZPOOL_STATUS_CORRUPT_DATA',	# data errors in user (meta)data
+	'ZPOOL_STATUS_FAILING_DEV',	# device experiencing errors
+	'ZPOOL_STATUS_VERSION_NEWER',	# newer on-disk version
+	'ZPOOL_STATUS_HOSTID_MISMATCH',	# last accessed by another system
+	'ZPOOL_STATUS_IO_FAILURE_WAIT',	# failed I/O, failmode 'wait'
+	'ZPOOL_STATUS_IO_FAILURE_CONTINUE', # failed I/O, failmode 'continue'
+	'ZPOOL_STATUS_BAD_LOG',		# cannot read log chain(s)
 
-    # If the pool has unsupported features but can still be opened in
-    # read-only mode, its status is ZPOOL_STATUS_UNSUP_FEAT_WRITE. If the
-    # pool has unsupported features but cannot be opened at all, its
-    # status is ZPOOL_STATUS_UNSUP_FEAT_READ.
-    'ZPOOL_STATUS_UNSUP_FEAT_READ',    # unsupported features for read
-    'ZPOOL_STATUS_UNSUP_FEAT_WRITE',    # unsupported features for write
+	# If the pool has unsupported features but can still be opened in
+	# read-only mode, its status is 'ZPOOL_STATUS_UNSUP_FEAT_WRITE.' If the
+	# pool has unsupported features but cannot be opened at all, its
+	# status is 'ZPOOL_STATUS_UNSUP_FEAT_READ.'
+	'ZPOOL_STATUS_UNSUP_FEAT_READ',	# unsupported features for read
+	'ZPOOL_STATUS_UNSUP_FEAT_WRITE',	# unsupported features for write
 
-    # These faults have no corresponding message ID.  At the time we are
-    # checking the status, the original reason for the FMA fault (I/O or
-    # checksum errors) has been lost.
-    'ZPOOL_STATUS_FAULTED_DEV_R',    # faulted device with replicas
-    'ZPOOL_STATUS_FAULTED_DEV_NR',    # faulted device with no replicas
+	# These faults have no corresponding message ID.  At the time we are
+	# checking the status, the original reason for the FMA fault (I/O or
+	# checksum errors) has been lost.
+	'ZPOOL_STATUS_FAULTED_DEV_R',	# faulted device with replicas
+	'ZPOOL_STATUS_FAULTED_DEV_NR',	# faulted device with no replicas
 
-    # The following are not faults per se, but still an error possibly
-    # requiring administrative attention.  There is no corresponding
-    # message ID.
-    'ZPOOL_STATUS_VERSION_OLDER',    # older legacy on-disk version
-    'ZPOOL_STATUS_FEAT_DISABLED',    # supported features are disabled
-    'ZPOOL_STATUS_RESILVERING',    # device being resilvered
-    'ZPOOL_STATUS_OFFLINE_DEV',    # device online
-    'ZPOOL_STATUS_REMOVED_DEV',    # removed device
+	# The following are not faults per se, but still an error possibly
+	# requiring administrative attention.  There is no corresponding
+	# message ID.
+	'ZPOOL_STATUS_VERSION_OLDER',	# older legacy on-disk version
+	'ZPOOL_STATUS_FEAT_DISABLED',	# supported features are disabled
+	'ZPOOL_STATUS_RESILVERING',	# device being resilvered
+	'ZPOOL_STATUS_OFFLINE_DEV',	# device online
+	'ZPOOL_STATUS_REMOVED_DEV',	# removed device
 
-    # Finally, the following indicates a healthy pool.
-    'ZPOOL_STATUS_OK',
-    ], start=0)
+	# Finally, the following indicates a healthy pool.
+	'ZPOOL_STATUS_OK',
+], start=0)
+
+
+pool_state_t = IntEnum('pool_state_t', [
+    'POOL_STATE_ACTIVE',		# In active use
+    'POOL_STATE_EXPORTED',		# Explicitly exported
+    'POOL_STATE_DESTROYED',		# Explicitly destroyed
+    'POOL_STATE_SPARE',		    # Reserved for hot spare use
+    'POOL_STATE_L2CACHE',		# Level 2 ARC device
+    'POOL_STATE_UNINITIALIZED',	# Internal spa_t state
+    'POOL_STATE_UNAVAIL',		# Internal libzfs state
+    'POOL_STATE_POTENTIALLY_ACTIVE'	# Internal libzfs state
+], start=0)
+
 
 
 """ C defs """
@@ -267,5 +274,33 @@ cdef('typedef enum { B_FALSE, B_TRUE } boolean_t;')
 
 def boolean_t(value=None):
     return ffi.cast('boolean_t', value)
+
+
+""" From sys/fs/zfs.h """
+
+
+class zfs_type_t(IntEnum):
+    """ Each dataset can be one of the following types.  These constants can be
+    combined into masks that can be passed to various functions. """
+    ZFS_TYPE_FILESYSTEM = 1
+    ZFS_TYPE_SNAPSHOT = 2
+    ZFS_TYPE_VOLUME = 4
+    ZFS_TYPE_POOL = 8
+
+    DATASET = ZFS_TYPE_FILESYSTEM | ZFS_TYPE_SNAPSHOT | ZFS_TYPE_VOLUME
+    ALL = DATASET | ZFS_TYPE_POOL
+
+
+cdef('typedef enum vdev_state { ... } vdev_state_t;')
+cdef('typedef enum vdev_aux { ... } vdev_aux_t;')
+
+cdef('typedef enum pool_state { ... } pool_state_t;')
+cdef('typedef enum pool_scan_func { ... } pool_scan_func_t;')
+cdef('typedef enum zio_type { ... } zio_type_T;')
+cdef('typedef enum pool_scan_stat { ... } pool_scan_stat_t;')
+
+cdef('typedef enum vdev_stat { ... } vdev_stat_t;')
+
+cdef('typedef enum zfs_ioc { ... } zfs_ioc_t;')
 
 
