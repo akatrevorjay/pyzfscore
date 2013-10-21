@@ -23,7 +23,15 @@ class ZDataset(_ZBase):
     _zfs_type_mask = zfs_type_t.DATASET
 
     @classmethod
+    def _exists(cls, name, type_mask=None):
+        if not type_mask:
+            type_mask = cls._zfs_type_mask
+        return libzfs.zfs_dataset_exists(cls._lzh, name, type_mask)
+
+    @classmethod
     def open(cls, name):
+        if not cls._exists(name):
+            return
         handle = libzfs.zfs_open(cls._lzh, name, cls._zfs_type_mask)
         return cls.from_handle(handle)
 
@@ -86,6 +94,9 @@ class ZDataset(_ZBase):
     def to_pool(self):
         handle = libzfs.zfs_get_pool_handle(self._handle)
         return ZPool.from_handle(handle)
+
+    def is_mounted(self):
+        return libzfs.zfs_is_mounted(self._handle)
 
     def destroy(self, defer=True):
         return libzfs.zfs_destroy(self._handle, defer)
