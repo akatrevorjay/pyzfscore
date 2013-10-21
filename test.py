@@ -1,16 +1,17 @@
 
 import pyzfscore
-from pyzfscore import _cffi, libzfs, zfs
-from pyzfscore._cffi import *
+from pyzfscore import _cffi, libzfs, zfs, libnvpair
+from pyzfscore.libnvpair import *
 from pyzfscore.libzfs import *
 from pyzfscore.zfs import *
+from pyzfscore._cffi import *
 
 
 def print_zfh(zhp):
     print "zhp_name=%s" % zfs_get_name(zhp)
 
 
-@ffi.callback('zfs_iter_f')
+@libzfs.ffi.callback('zfs_iter_f')
 def _zfs_iter_cb(zhp, arg=None):
     arg = ffi.from_handle(arg)
     name = zfs_get_name(zhp)
@@ -35,7 +36,7 @@ def print_zph(zhp):
     print "zhp_state=%s" % zpool_get_state(zhp)
 
 
-@ffi.callback('zpool_iter_f')
+@libzfs.ffi.callback('zpool_iter_f')
 def _zpool_iter_cb(zhp, arg=None):
     name = zpool_get_name(zhp)
     print "pool %s: zhp=%s, arg=%s" % (name, zhp, ffi.from_handle(arg))

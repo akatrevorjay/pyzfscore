@@ -51,7 +51,7 @@ class ZDataset(_ZBase):
     def _children_iterator(cls, func, args):
         children = []
 
-        @ffi.callback('zfs_iter_f')
+        @libzfs.ffi.callback('zfs_iter_f')
         def _zfs_iter_cb(handle, arg=None):
             c = cls.from_handle(handle)
             children.append(c)
@@ -110,7 +110,7 @@ class ZPool(_ZBase):
     def iter(cls):
         pools = []
 
-        @ffi.callback('zpool_iter_f')
+        @libzfs.ffi.callback('zpool_iter_f')
         def _zpool_iter_cb(handle, arg=None):
             p = cls.from_handle(handle)
             pools.append(p)

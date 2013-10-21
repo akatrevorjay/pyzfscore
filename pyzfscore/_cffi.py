@@ -8,9 +8,7 @@ from cffi import FFI
 
 ffi = FFI()
 
-czfs = ffi.dlopen('zfs')
-czpool = ffi.dlopen('zpool')
-cnvpair = ffi.dlopen('nvpair')
+
 
 
 def ptop(typ, val):
@@ -19,7 +17,7 @@ def ptop(typ, val):
     return ptop
 
 
-def cdef(decl, returns_string=False, nullable=False):
+def cdef(decl, returns_string=False, nullable=False, ffi=ffi):
     ffi.cdef(decl)
     def wrap(f):
         @wraps(f)
@@ -52,3 +50,54 @@ def cdef(decl, returns_string=False, nullable=False):
     return wrap
 
 
+czfs = ffi.dlopen('zfs')
+czpool = ffi.dlopen('zpool')
+cnvpair = ffi.dlopen('nvpair')
+
+
+ffi.cdef('typedef enum { B_FALSE, B_TRUE } boolean_t;')
+
+def boolean_t(value=None):
+    return ffi.cast('boolean_t', value)
+
+ffi.cdef('''
+typedef unsigned char	uchar_t;
+typedef unsigned short	ushort_t;
+typedef unsigned int	uint_t;
+typedef unsigned long	ulong_t;
+typedef long long	longlong_t;
+typedef longlong_t	hrtime_t;
+''')
+
+
+def verify(ffi=ffi):
+    return ffi.verify('''
+    #include <libzfs.h>
+    #include <sys/fs/zfs.h>
+    #include <sys/types.h>
+    #include <libnvpair.h>
+    ''',
+        define_macros=[
+            ('NDEBUG', 1),
+            ('HAVE_IOCTL_IN_SYS_IOCTL_H', 1)
+        ],
+        include_dirs=['/usr/include/libzfs', '/usr/include/libspl'],
+        libraries=['nvpair', 'zfs', 'zpool'],
+    )
+
+    #return ffi.verify('''
+    ##include <sys/avl.h>
+    ##include <sys/fs/zfs.h>
+    ##include <sys/types.h>
+    ##include <sys/param.h>
+    ##include <libzfs.h>
+    ##include <libnvpair.h>
+    #''',
+    #    define_macros=[
+    #        ('NDEBUG', 1),
+    #        ('HAVE_IOCTL_IN_SYS_IOCTL_H', 1),
+    #        ('PATH_MAX', 4096),
+    #    ],
+    #    include_dirs=['/usr/include/libzfs', '/usr/include/libspl'],
+    #    libraries=['nvpair', 'zfs', 'zpool'],
+    #)
