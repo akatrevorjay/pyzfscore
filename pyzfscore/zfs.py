@@ -82,6 +82,76 @@ class ZDataset(_ZBase):
     def _load(self):
         self.name = libzfs.zfs_get_name(self._handle)
 
+    """ Path helpers """
+
+    def path(self, start=0, len=None):
+        """ Splits name of object into paths starting at index start """
+        return self.name.split('/')[start:len]
+
+    @property
+    def basename(self):
+        return self.path(-1)[0]
+
+    """ Parent traversal """
+
+    @property
+    def pool_name(self):
+        name = self.path(0, 1)[0]
+        if '@' in name:
+            name = name.split('@', 1)[0]
+        return name
+
+    def to_pool(self):
+        #return ZPool.open(self.pool_name)
+        handle = libzfs.zfs_get_pool_handle(self._handle)
+        return ZPool.from_handle(handle)
+
+    @property
+    def parent_name(self):
+        """ Returns the associated filesystem/volume name """
+        pname = self.path(0, -1)
+        if '@' in pname[-1]:
+            pname[-1] = pname[-1].split('@', 1)[0]
+        return '/'.join(pname)
+
+    def to_parent(self):
+        return ZDataset.open(self.parent_name)
+
+    """ Dataset tests """
+
+    def is_mounted(self):
+        return libzfs.zfs_is_mounted(self._handle)
+
+    """ Children traversal """
+
+    #def open_child(self, name):
+    #    sep = ''
+    #    if not name.startswith('@') or name.startswith('/'):
+    #        sep = '/'
+    #    full_name = '%s%s%s' % (self.name, sep, name)
+    #    return ZDataset.open(full_name)
+
+    #def open_child_snapshot(self, name):
+    #    sep = ''
+    #    if not name.startswith('@'):
+    #        sep = '@'
+    #    full_name = '%s%s%s' % (self.name, sep, name)
+    #    return ZSnapshot.open(full_name)
+
+    #def open_child_filesystem(self, name):
+    #    sep = ''
+    #    if not name.startswith('/'):
+    #        sep = '/'
+    #    full_name = '%s%s%s' % (self.name, sep, name)
+    #    return ZFilesystem.open(full_name)
+
+    #def open_child_filesystem(self, name):
+    #    sep = ''
+    #    if not name.startswith('/'):
+    #        sep = '/'
+    #    full_name = '%s%s%s' % (self.name, sep, name)
+    #    return ZFilesystem.open(full_name)
+
     def iter_children(self):
         return self._children_iterator(libzfs.zfs_iter_children, [self._handle])
 
@@ -91,12 +161,7 @@ class ZDataset(_ZBase):
     def iter_snapshots_sorted(self):
         return self._children_iterator(libzfs.zfs_iter_snapshots_sorted, [self._handle])
 
-    def to_pool(self):
-        handle = libzfs.zfs_get_pool_handle(self._handle)
-        return ZPool.from_handle(handle)
-
-    def is_mounted(self):
-        return libzfs.zfs_is_mounted(self._handle)
+    """ Dataset operations """
 
     def destroy(self, defer=True):
         return libzfs.zfs_destroy(self._handle, defer)
@@ -108,6 +173,25 @@ class ZFilesystem(ZDataset):
 
 class ZSnapshot(ZDataset):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_SNAPSHOT
+
+    @property
+    def snapshot_name(self):
+        """ Returns the snapshot name """
+        return self.basename.rsplit('@', 1)[1]
+
+    @property
+    def filesystem_name(self):
+        """ Returns the associated filesystem/volume name """
+        return self.basename.rsplit('@', 1)[0]
+
+    def destroy(self, defer=True, recursive=False):
+        if not recursive:
+            return super(ZSnapshot, self).destroy(defer=defer)
+        else:
+            parent = self.to_parent()
+            return libzfs.zfs_destroy_snaps(parent._handle,
+                                            self.snapshot_name,
+                                            defer)
 
 
 class ZVolume(ZDataset):

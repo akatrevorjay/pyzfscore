@@ -1,18 +1,13 @@
 #!/usr/bin/env python
 
-#from .. import _cffi
-#from .._cffi import czfs, czpool, cnvpair, ptop, cdef, ffi, boolean_t
-#from .._cffi import boolean_t
+from .. import libnvpair
 from . import _cffi, consts
 from ._cffi import ffi, boolean_t
-
-
 from .consts import libzfs_errors, \
         zprop_source_t, \
         zfs_prop_t, zfs_type_t, zfs_userquota_prop_t, \
         zpool_prop_t, zpool_status_t, \
         pool_state_t
-
 from .czfs import czfs
 
 
@@ -184,7 +179,21 @@ def zfs_iter_snapspec(zhp, c, handler, arg=None):
 
 
 def zfs_destroy(zhp, defer=True):
-    return czfs.zfs_destroy(zhp, boolean_t(defer))
+    bt_defer = boolean_t(defer)
+    return not bool(czfs.zfs_destroy(zhp, bt_defer))
+
+
+def zfs_destroy_snaps(zhp, snapname, defer=True):
+    """Destroys all snapshost with given name in zhp & descendants."""
+    bt_defer = boolean_t(defer)
+    return not bool(czfs.zfs_destroy_snaps(zhp, snapname, bt_defer))
+
+
+def zfs_snapshot(lzh, path, recursive=True, props=None):
+    # TODO generate nvl_props from props
+    nvl_props = libnvpair.ffi.new('nvlist_t *')
+    bt_recursive = boolean_t(recursive)
+    return not bool(czfs.zfs_snapshot(lzh, path, bt_recursive, nvl_props))
 
 
 """ Miscellaneous functions. """
@@ -203,6 +212,7 @@ def zfs_name_valid(name, zfs_type_t=zfs_type_t.ALL):
 
 
 def zfs_dataset_exists(zhp, name, zfs_type_t=zfs_type_t.ALL):
+    """Returns if dataset @name exists."""
     return bool(czfs.zfs_dataset_exists(zhp, name, zfs_type_t))
 
 
