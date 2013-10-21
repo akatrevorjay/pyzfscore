@@ -110,9 +110,9 @@ class ZDataset(_ZBase):
     def parent_name(self):
         """ Returns the associated filesystem/volume name """
         pname = self.path(0, -1)
-        if '@' in pname[-1]:
-            pname[-1] = pname[-1].split('@', 1)[0]
-        return '/'.join(pname)
+        # We may not have a parent
+        if pname:
+            return '/'.join(pname)
 
     def to_parent(self):
         return ZDataset.open(self.parent_name)
@@ -122,35 +122,28 @@ class ZDataset(_ZBase):
     def is_mounted(self):
         return libzfs.zfs_is_mounted(self._handle)
 
-    """ Children traversal """
+    """ Child traversal """
 
-    #def open_child(self, name):
-    #    sep = ''
-    #    if not name.startswith('@') or name.startswith('/'):
-    #        sep = '/'
-    #    full_name = '%s%s%s' % (self.name, sep, name)
-    #    return ZDataset.open(full_name)
+    def open_child(self, name):
+        sep = ''
+        if not name.startswith('@') or name.startswith('/'):
+            sep = '/'
+        full_name = '%s%s%s' % (self.name, sep, name)
+        return ZDataset.open(full_name)
 
-    #def open_child_snapshot(self, name):
-    #    sep = ''
-    #    if not name.startswith('@'):
-    #        sep = '@'
-    #    full_name = '%s%s%s' % (self.name, sep, name)
-    #    return ZSnapshot.open(full_name)
+    def open_child_snapshot(self, name):
+        full_name = '%s@%s' % (self.name, name)
+        return ZSnapshot.open(full_name)
 
-    #def open_child_filesystem(self, name):
-    #    sep = ''
-    #    if not name.startswith('/'):
-    #        sep = '/'
-    #    full_name = '%s%s%s' % (self.name, sep, name)
-    #    return ZFilesystem.open(full_name)
+    def open_child_filesystem(self, name):
+        full_name = '%s/%s' % (self.name, name)
+        return ZFilesystem.open(full_name)
 
-    #def open_child_filesystem(self, name):
-    #    sep = ''
-    #    if not name.startswith('/'):
-    #        sep = '/'
-    #    full_name = '%s%s%s' % (self.name, sep, name)
-    #    return ZFilesystem.open(full_name)
+    def open_child_volume(self, name):
+        full_name = '%s/%s' % (self.name, name)
+        return ZVolume.open(full_name)
+
+    """ Child iteration """
 
     def iter_children(self):
         return self._children_iterator(libzfs.zfs_iter_children, [self._handle])
@@ -167,12 +160,37 @@ class ZDataset(_ZBase):
         return libzfs.zfs_destroy(self._handle, defer)
 
 
-class ZFilesystem(ZDataset):
+class _SnapshottableZDataset:
+    # TODO props
+    def snapshot(self, name, recursive=False):
+        full_name = '%s@%s' % (self.name, name)
+        return libzfs.zfs_snapshot(self._lzh, full_name, recursive=recursive)
+
+    def destroy_snapshot(self, name, defer=True, recursive=False):
+        full_name = '%s@%s' % (self.name, name)
+        snapshot = ZSnapshot.open(full_name)
+        return snapshot.destroy(defer=defer, recursive=recursive)
+
+
+class ZFilesystem(ZDataset, _SnapshottableZDataset):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_FILESYSTEM
+
+
+class ZVolume(ZDataset, _SnapshottableZDataset):
+    _zfs_type_mask = zfs_type_t.ZFS_TYPE_VOLUME
 
 
 class ZSnapshot(ZDataset):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_SNAPSHOT
+
+    """ Path helpers """
+
+    @property
+    def parent_name(self):
+        """ Returns the associated filesystem/volume name """
+        return self.name.rsplit('@', 1)[0]
+
+    filesystem_name = parent_name
 
     @property
     def snapshot_name(self):
@@ -180,7 +198,7 @@ class ZSnapshot(ZDataset):
         return self.basename.rsplit('@', 1)[1]
 
     @property
-    def filesystem_name(self):
+    def filesystem_basename(self):
         """ Returns the associated filesystem/volume name """
         return self.basename.rsplit('@', 1)[0]
 
@@ -192,10 +210,6 @@ class ZSnapshot(ZDataset):
             return libzfs.zfs_destroy_snaps(parent._handle,
                                             self.snapshot_name,
                                             defer)
-
-
-class ZVolume(ZDataset):
-    _zfs_type_mask = zfs_type_t.ZFS_TYPE_VOLUME
 
 
 class ZPool(_ZBase):
