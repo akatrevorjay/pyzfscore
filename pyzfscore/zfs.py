@@ -240,6 +240,7 @@ class ZPool(_ZBase):
     @classmethod
     def open(cls, name):
         handle = libzfs.zpool_open(cls._lzh, name)
+        #handle = libzfs.zpool_open_canfail(cls._lzh, name)
         return cls.from_handle(handle)
 
     def _get_libzfs_handle(self):

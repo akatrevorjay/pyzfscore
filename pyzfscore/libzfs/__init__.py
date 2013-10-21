@@ -189,7 +189,7 @@ def zfs_destroy_snaps(zhp, snapname, defer=True):
     return not bool(czfs.zfs_destroy_snaps(zhp, snapname, bt_defer))
 
 
-def zfs_snapshot(lzh, path, recursive=True, props=None):
+def zfs_snapshot(lzh, path, recursive=False, props=None):
     # TODO generate nvl_props from props
     nvl_props = libnvpair.ffi.new('nvlist_t *')
     bt_recursive = boolean_t(recursive)
