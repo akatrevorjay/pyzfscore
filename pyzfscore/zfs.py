@@ -56,21 +56,6 @@ class ZDataset(_ZBase):
         return self
 
     @classmethod
-    def _children_iterator(cls, func, args):
-        children = []
-
-        @libzfs.ffi.callback('zfs_iter_f')
-        def _zfs_iter_cb(handle, arg=None):
-            c = cls.from_handle(handle)
-            children.append(c)
-            return 0
-
-        args.append(_zfs_iter_cb)
-        # TODO instead of args would partials be better?
-        func(*args)
-        return children
-
-    @classmethod
     def iter_root(cls):
         return cls._children_iterator(libzfs.zfs_iter_root, [cls._lzh])
 
@@ -144,6 +129,21 @@ class ZDataset(_ZBase):
         return ZVolume.open(full_name)
 
     """ Child iteration """
+
+    @classmethod
+    def _children_iterator(cls, func, args):
+        children = []
+
+        @libzfs.ffi.callback('zfs_iter_f')
+        def _zfs_iter_cb(handle, arg=None):
+            c = cls.from_handle(handle)
+            children.append(c)
+            return 0
+
+        args.append(_zfs_iter_cb)
+        # TODO instead of args would partials be better?
+        func(*args)
+        return children
 
     def iter_children(self):
         return self._children_iterator(libzfs.zfs_iter_children, [self._handle])
