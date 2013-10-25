@@ -3,8 +3,6 @@ from .flufl.enum import IntEnum
 from . import _cffi, utils
 from ._cffi import boolean_t
 
-import types
-
 from cffi import FFI
 ffi = FFI()
 ffi.include(_cffi.ffi)
@@ -194,14 +192,14 @@ class NVList(object):
         return meth(*margs)
 
     _type_map = dict(
-        uint64=types.IntType,
-        string=types.StringType,
-        boolean=types.BooleanType,
+        uint64=int,
+        string=str,
+        boolean=bool,
     )
 
     def add(self, k, v):
         for tk, tv in self._type_map.iteritems():
-            if type(v) is tv:
+            if isinstance(v, tv):
                 meth = getattr(self, 'add_%s' % tk)
                 return meth(k, v)
         raise Exception("Cannot add '%s': Unknown type for '%s'", k, v)

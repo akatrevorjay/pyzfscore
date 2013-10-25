@@ -9,7 +9,6 @@ from .consts import libzfs_errors, \
         zpool_prop_t, zpool_status_t, \
         pool_state_t
 from .czfs import czfs
-import types
 
 
 """ Library initialization """
@@ -159,7 +158,7 @@ def zfs_prop_get(zhp, prop, source=ffi.NULL, stat=ffi.NULL, literal=False):
     literal = boolean_t(literal)
 
     # This probably doesn't belong here..
-    if type(prop) is types.StringType:
+    if isinstance(prop, str):
         prop = czfs.zfs_name_to_prop(prop)
 
     rv = czfs.zfs_prop_get(zhp, prop, propbuf, ffi.sizeof(propbuf), source, stat, ffi.sizeof(stat), literal)
