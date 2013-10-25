@@ -1,7 +1,9 @@
 
 from .flufl.enum import IntEnum
-from . import _cffi
+from . import _cffi, utils
+from ._cffi import boolean_t
 
+import types
 
 from cffi import FFI
 ffi = FFI()
@@ -128,7 +130,6 @@ def nvlist_add_string(nvlist, k, v):
     return not bool(cnvpair.nvlist_add_string(nvlist, k, v))
 
 
-import types
 
 
 class NVList(object):
@@ -169,27 +170,66 @@ class NVList(object):
         for k in kwargs:
             self.add(k, kwargs[k])
 
-    def add_uint64(self, k, v):
-        rv = cnvpair.nvlist_add_uint64(self._nvlist[0], k, v)
+    def _get_nvlist_meth_from_func_name(self, **kwargs):
+        meth_suffix = kwargs.get('_meth_suffix', '')
+        caller_name = utils.get_func_name(frame=3)
+        meth_name = 'nvlist_%s%s' % (caller_name, meth_suffix)
+        return getattr(cnvpair, meth_name)
+
+    def _add_base(self, *args, **kwargs):
+        meth = self._get_nvlist_meth_from_func_name(**kwargs)
+
+        margs = [self._nvlist[0]]
+        margs.extend(args)
+
+        rv = meth(*margs)
         return not bool(rv)
 
+    def _lookup_base(self, *args, **kwargs):
+        meth = self._get_nvlist_meth_from_func_name(**kwargs)
+
+        margs = [self._nvlist[0]]
+        margs.extend(args)
+
+        return meth(*margs)
+
+    def add_uint64(self, k, v):
+        return self._add_base(k, v)
+
+    def lookup_uint64(self, k):
+        v = ffi.new('uint64_t *')
+        rv = self._lookup_base(k, v)
+        if not bool(rv):
+            return v[0]
+
     def add_string(self, k, v):
-        rv = cnvpair.nvlist_add_string(self._nvlist[0], k, v)
-        return not bool(rv)
+        return self._add_base(k, v)
+
+    def lookup_string(self, k):
+        v = ffi.new('char **')
+        rv = self._lookup_base(k, v)
+        if not bool(rv):
+            return ffi.string(v[0])
+
+    def add_boolean(self, k, v):
+        v = boolean_t(v)
+        return self._add_base(k, v, _meth_suffix='_value')
+
+    def lookup_boolean(self, k):
+        v = ffi.new('boolean_t *')
+        rv = self._lookup_base(k, v, _meth_suffix='_value')
+        if not bool(rv):
+            return bool(v[0])
 
     def add(self, k, v):
         if type(v) is types.IntType:
             self.add_uint64(k, v)
         elif type(v) is types.StringType:
             self.add_string(k, v)
+        elif type(v) is types.BooleanType:
+            self.add_boolean(k, v)
         else:
             raise Exception("Cannot add '%s': Unknown type for '%s'", k, v)
-
-    def lookup_string(self, k):
-        v = ffi.new('char **')
-        rv = cnvpair.nvlist_lookup_string(self._nvlist[0], k, v)
-        if not bool(rv):
-            return ffi.string(v[0])
 
 
 ffi.cdef('''
