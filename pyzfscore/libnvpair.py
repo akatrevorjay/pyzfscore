@@ -108,15 +108,94 @@ typedef struct nv_alloc {
 ''')
 
 
-#ffi.cdef('void nvlist_print(FILE *, nvlist_t *);')
 def nvlist_print(f, nvlist_t):
     return cnvpair.nvlist_print(f, nvlist_t)
 
 
-#ffi.cdef('void dump_nvlist(nvlist_t *, int);')
 def dump_nvlist(nvlist_t, i):
     return cnvpair.dump_nvlist(nvlist_t, i)
 
+
+def nvlist_alloc(nvlist_t, flags, i):
+    return not bool(cnvpair.nvlist_alloc(nvlist_t, flags, i))
+
+
+def nvlist_add_uint64(nvlist, k, v):
+    return not bool(cnvpair.nvlist_add_uint64(nvlist, k, v))
+
+
+def nvlist_add_string(nvlist, k, v):
+    return not bool(cnvpair.nvlist_add_string(nvlist, k, v))
+
+
+import types
+
+
+class NVList(object):
+    class flags:
+        UNIQUE_NAME = 1
+        UNIQUE_NAME_TYPE = 2
+
+    def __init__(self, flags=flags.UNIQUE_NAME, _nvlist=None):
+        self._nvlist = _nvlist
+        if not self._nvlist:
+            self._nvlist = ffi.new('nvlist_t **')
+            self._alloc(flags)
+
+    @classmethod
+    def from_nvlist(cls, nvlist):
+        self = cls(_nvlist=nvlist)
+        return self
+
+    def _alloc(self, flags):
+        return cnvpair.nvlist_alloc(self._nvlist, flags, 0)
+
+    def dump(self):
+        return cnvpair.dump_nvlist(self._nvlist[0], 0)
+
+    @property
+    def handle(self):
+        # TODO Should we dup this?
+        return self._nvlist
+
+    def update(self, arg=None, **kwargs):
+        if arg:
+            if hasattr(arg, 'keys'):
+                for k in arg:
+                    self.add(k, arg[k])
+            else:
+                for (k, v) in arg:
+                    self.add(k, v)
+        for k in kwargs:
+            self.add(k, kwargs[k])
+
+    def add_uint64(self, k, v):
+        rv = cnvpair.nvlist_add_uint64(self._nvlist[0], k, v)
+        return not bool(rv)
+
+    def add_string(self, k, v):
+        rv = cnvpair.nvlist_add_string(self._nvlist[0], k, v)
+        return not bool(rv)
+
+    def add(self, k, v):
+        if type(v) is types.IntType:
+            self.add_uint64(k, v)
+        elif type(v) is types.StringType:
+            self.add_string(k, v)
+        else:
+            raise Exception("Cannot add '%s': Unknown type for '%s'", k, v)
+
+    def lookup_string(self, k):
+        v = ffi.new('char **')
+        rv = cnvpair.nvlist_lookup_string(self._nvlist[0], k, v)
+        if not bool(rv):
+            return ffi.string(v[0])
+
+
+ffi.cdef('''
+void nvlist_print(FILE *, nvlist_t *);
+void dump_nvlist(nvlist_t *, int);
+''')
 
 ffi.cdef('''
 /* list management */
