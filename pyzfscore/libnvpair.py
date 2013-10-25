@@ -193,6 +193,19 @@ class NVList(object):
 
         return meth(*margs)
 
+    _type_map = dict(
+        uint64=types.IntType,
+        string=types.StringType,
+        boolean=types.BooleanType,
+    )
+
+    def add(self, k, v):
+        for tk, tv in self._type_map.iteritems():
+            if type(v) is tv:
+                meth = getattr(self, 'add_%s' % tk)
+                return meth(k, v)
+        raise Exception("Cannot add '%s': Unknown type for '%s'", k, v)
+
     def add_uint64(self, k, v):
         return self._add_base(k, v)
 
@@ -220,16 +233,6 @@ class NVList(object):
         rv = self._lookup_base(k, v, _meth_suffix='_value')
         if not bool(rv):
             return bool(v[0])
-
-    def add(self, k, v):
-        if type(v) is types.IntType:
-            self.add_uint64(k, v)
-        elif type(v) is types.StringType:
-            self.add_string(k, v)
-        elif type(v) is types.BooleanType:
-            self.add_boolean(k, v)
-        else:
-            raise Exception("Cannot add '%s': Unknown type for '%s'", k, v)
 
 
 ffi.cdef('''
