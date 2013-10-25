@@ -9,6 +9,7 @@ from .consts import libzfs_errors, \
         zpool_prop_t, zpool_status_t, \
         pool_state_t
 from .czfs import czfs
+import types
 
 
 """ Library initialization """
@@ -147,6 +148,25 @@ def zfs_get_pool_handle(zhp):
     return czfs.zfs_get_pool_handle(zhp)
 
 
+""" Property management functions. Some functions are shared with the kernel,
+and are found in sys/fs/zfs.h """
+
+""" zfs dataset property management """
+
+
+def zfs_prop_get(zhp, prop, source=ffi.NULL, stat=ffi.NULL, literal=False):
+    propbuf = ffi.new('char *')
+    literal = boolean_t(literal)
+
+    # This probably doesn't belong here..
+    if type(prop) is types.StringType:
+        prop = czfs.zfs_name_to_prop(prop)
+
+    rv = czfs.zfs_prop_get(zhp, prop, propbuf, ffi.sizeof(propbuf), source, stat, ffi.sizeof(stat), literal)
+    if not bool(rv):
+        return ffi.string(propbuf)
+
+
 """ Iterator functions """
 
 
@@ -193,7 +213,7 @@ def zfs_snapshot(lzh, path, recursive=False, props=None):
     nvl_props = libnvpair.NVList()
     nvl_props.update(props)
     bt_recursive = boolean_t(recursive)
-    return not bool(czfs.zfs_snapshot(lzh, path, bt_recursive, nvl_props.handle))
+    return not bool(czfs.zfs_snapshot(lzh, path, bt_recursive, nvl_props.handle[0]))
 
 
 """ Miscellaneous functions. """

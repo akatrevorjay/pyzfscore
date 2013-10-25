@@ -4,6 +4,10 @@ from ._cffi import ffi
 
 
 ffi.cdef('''
+zfs_prop_t zfs_name_to_prop(const char *);
+''')
+
+ffi.cdef('''
 /*
  * libzfs errors
  */

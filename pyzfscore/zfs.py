@@ -159,6 +159,11 @@ class ZDataset(_ZBase):
     def destroy(self, defer=True):
         return libzfs.zfs_destroy(self._handle, defer)
 
+    """ Property operations """
+
+    def prop_get(self, name, literal=False):
+        return libzfs.zfs_prop_get(self._handle, name, literal=literal)
+
 
 class _SnapshottableZDataset:
     # TODO props
