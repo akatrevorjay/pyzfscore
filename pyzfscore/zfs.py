@@ -164,6 +164,9 @@ class ZDataset(_ZBase):
     def prop_get(self, name, literal=False):
         return libzfs.zfs_prop_get(self._handle, name, literal=literal)
 
+    def prop_set(self, name, value):
+        return libzfs.zfs_prop_set(self._handle, name, value)
+
 
 class _SnapshottableZDataset:
     # TODO props

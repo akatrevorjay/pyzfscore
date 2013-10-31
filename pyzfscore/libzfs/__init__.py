@@ -166,6 +166,14 @@ def zfs_prop_get(zhp, prop, source=ffi.NULL, stat=ffi.NULL, literal=False):
         return ffi.string(propbuf)
 
 
+def zfs_prop_set(zhp, prop, value):
+    # TODO Check for retvals, this not bool() stuff may not actually work very well..
+    # czfs.EZFS_MOUNTFAILED == 'property may be set, but unable to remount'
+    # czfs.EZFS_SHARENFSFAILED == 'property may be set, but unable to reshare'
+    # MAYBE czfs.EZFS_SHARESMBFAILED == 'property may be set, but unable to reshare'
+    return not bool(czfs.zfs_prop_set(zhp, prop, value))
+
+
 """ Iterator functions """
 
 
