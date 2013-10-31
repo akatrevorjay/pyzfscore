@@ -93,11 +93,19 @@ class ZDataset(_ZBase):
 
     @property
     def parent_name(self):
-        """ Returns the associated filesystem/volume name """
+        """ Returns the parent filesystem/volume name """
         pname = self.path(0, -1)
         # We may not have a parent
         if pname:
             return '/'.join(pname)
+
+    @property
+    def parent_basename(self):
+        """ Returns the parent filesystem/volume basename """
+        pname = self.path(0, -1)
+        # We may not have a parent
+        if pname:
+            return pname[-1]
 
     def to_parent(self):
         return ZDataset.open(self.parent_name)
@@ -194,21 +202,23 @@ class ZSnapshot(ZDataset):
     """ Path helpers """
 
     @property
-    def parent_name(self):
+    def filesystem_name(self):
         """ Returns the associated filesystem/volume name """
         return self.name.rsplit('@', 1)[0]
 
-    filesystem_name = parent_name
-
-    @property
-    def snapshot_name(self):
-        """ Returns the snapshot name """
-        return self.basename.rsplit('@', 1)[1]
+    parent_name = filesystem_name
 
     @property
     def filesystem_basename(self):
         """ Returns the associated filesystem/volume name """
         return self.basename.rsplit('@', 1)[0]
+
+    parent_basename = filesystem_basename
+
+    @property
+    def snapshot_name(self):
+        """ Returns the snapshot name """
+        return self.basename.rsplit('@', 1)[1]
 
     def destroy(self, defer=True, recursive=False):
         if not recursive:
