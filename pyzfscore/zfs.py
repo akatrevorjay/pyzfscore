@@ -19,17 +19,151 @@ class _ZBase(object):
         return '<%s: %s>' % (self.__class__.__name__, self.name)
 
 
+class _ZBaseProperty(object):
+    """Base Property object
+    """
+
+    def __init__(self, parent, name, value, source):
+        self._parent = parent
+        self.name = name
+        self._set(value, ignore=True)
+        self.source = source
+
+    def __repr__(self):
+        prefix = ''
+        source = ''
+        if self.source == '-':
+            prefix += 'Statistic'
+        elif self.source in ['default', 'local']:
+            prefix += self.source.capitalize()
+        elif self.source:
+            prefix += 'Inherited'
+            source = ' source=%s' % self.source
+
+        name = prefix + self.__class__.__name__
+        return "%s(%s=%s%s)" % (name, self.name, self.value, source)
+
+    def __unicode__(self):
+        return unicode(self.value)
+
+    def __str__(self):
+        return str(self.value)
+
+    def __bool__(self):
+        value = self.value
+        if value == 'on':
+            return True
+        elif value == 'off':
+            return False
+
+    #def __nonzero__(self):
+    #    value = self.value
+    #    if value == 'on':
+    #        return True
+    #    elif value:
+    #        return False
+
+    def _get(self):
+        return self._value
+
+    def _set(self, value, ignore=False):
+        if not ignore:
+            self._parent._set(self.name, value)
+        self._value = value
+
+    value = property(_get, _set)
+
+
+class ZDatasetProperty(_ZBaseProperty):
+    """Dataset Property object
+    """
+    pass
+
+
+class _ZBaseProperties(object):
+    """Base Properties object
+    """
+
+    def __init__(self, parent):
+        self._parent = parent
+
+    """ Magic """
+
+    def __getitem__(self, k):
+        """Gets dataset property.
+
+        dataset = Dataset('dpool/carp')
+        dataset.properties['alloc']
+
+        """
+        # TODO return KeyError if not found
+        return self._get(k)
+
+    def __setitem__(self, k, v):
+        """Sets dataset property.
+
+        dataset = Dataset('dpool/carp')
+        dataset.properties['readonly'] = 'on'
+
+        """
+        # TODO return ValueError if not found
+        return self._set(k, v)
+
+    # TODO Delete item
+    #def __delitem__(self, k):
+    #    """Deletes dataset property.
+    #    """
+    #    # TODO raise KeyError on non existent
+    #    return self._inherit(k)
+
+
+class ZDatasetProperties(_ZBaseProperties):
+    """Storage Dataset Properties object
+    """
+
+    def _get(self, name, literal=False):
+        """Gets dataset property.
+        """
+        value = libzfs.zfs_prop_get(self._parent._handle, name, literal=literal)
+        # TODO source
+        source = None
+        return ZDatasetProperty(self, name, value, source)
+
+    def _set(self, name, value):
+        """Sets Dataset property.
+        """
+        ret = libzfs.zfs_prop_set(self._parent._handle, name, value)
+        return ret
+
+    # TODO Delete item == inherit property
+    #def _inherit(self, k):
+    #    """Inherits property from parents
+    #    """
+
+
 class ZDataset(_ZBase):
     _zfs_type_mask = zfs_type_t.DATASET
 
+    def __init__(self):
+        self.props = ZDatasetProperties(self)
+
     @classmethod
     def _exists(cls, name, type_mask=None):
+        """Class method that returns if dataset exists.
+        """
         if not type_mask:
             type_mask = cls._zfs_type_mask
         return libzfs.zfs_dataset_exists(cls._lzh, name, type_mask)
 
+    def exists(self):
+        """Returns if dataset exists.
+        """
+        return self._exists(self.name)
+
     @classmethod
     def open(cls, name):
+        """Opens a dataset object by name.
+        """
         if not cls._exists(name):
             return
         handle = libzfs.zfs_open(cls._lzh, name, cls._zfs_type_mask)
@@ -44,6 +178,8 @@ class ZDataset(_ZBase):
 
     @classmethod
     def from_handle(cls, handle):
+        """Creates a dataset object from an existing zfs_handle.
+        """
         # Find type on init of ZDataset from_handle and use proper subclass
         handle_type = libzfs.zfs_get_type(handle)
         # TODO is there a way to trawl up mro to find the parent without
@@ -57,6 +193,8 @@ class ZDataset(_ZBase):
 
     @classmethod
     def iter_root(cls):
+        """Iterates through root datasets.
+        """
         return cls._children_iterator(libzfs.zfs_iter_root, [cls._lzh])
 
     list = iter_root
@@ -166,14 +304,6 @@ class ZDataset(_ZBase):
 
     def destroy(self, defer=True):
         return libzfs.zfs_destroy(self._handle, defer)
-
-    """ Property operations """
-
-    def prop_get(self, name, literal=False):
-        return libzfs.zfs_prop_get(self._handle, name, literal=literal)
-
-    def prop_set(self, name, value):
-        return libzfs.zfs_prop_set(self._handle, name, value)
 
 
 class _SnapshottableZDataset:
