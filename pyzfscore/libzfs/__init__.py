@@ -174,6 +174,20 @@ def zfs_prop_set(zhp, prop, value):
     return not bool(czfs.zfs_prop_set(zhp, prop, value))
 
 
+def zfs_get_user_props(zhp):
+    return czfs.zfs_get_user_props(zhp)
+
+
+def zfs_get_user_props_list(zhp):
+    nv = zfs_get_user_props(zhp)
+    return libnvpair.dump_nvlist(nv, 0)
+
+
+# TODO move this
+def zfs_prop_user(propname):
+    return bool(czfs.zfs_prop_user(propname))
+
+
 """ Iterator functions """
 
 

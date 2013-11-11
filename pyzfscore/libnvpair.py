@@ -142,9 +142,17 @@ class NVList(object):
             self._alloc(flags)
 
     @classmethod
-    def from_nvlist(cls, nvlist):
-        self = cls(_nvlist=nvlist)
+    def from_nvlist_pp(cls, nvlist_pp):
+        self = cls(_nvlist=nvlist_pp)
         return self
+
+    from_nvlist = from_nvlist_pp
+
+    @classmethod
+    def from_nvlist_p(cls, nvlist_p):
+        nvlist = ffi.new('nvlist_t **')
+        nvlist[0] = nvlist_p
+        return cls.from_nvlist_pp(nvlist)
 
     def _alloc(self, flags):
         return cnvpair.nvlist_alloc(self._nvlist, flags, 0)
@@ -231,6 +239,12 @@ class NVList(object):
         rv = self._lookup_base(k, v, _meth_suffix='_value')
         if not bool(rv):
             return bool(v[0])
+
+    def lookup_nvlist(self, k):
+        v = ffi.new('nvlist_t **')
+        rv = self._lookup_base(k, v)
+        if not bool(rv):
+            return NVList.from_nvlist(v)
 
 
 ffi.cdef('''

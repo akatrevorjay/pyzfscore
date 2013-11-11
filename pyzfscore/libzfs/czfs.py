@@ -4,7 +4,39 @@ from ._cffi import ffi
 
 
 ffi.cdef('''
+/*
+ * Dataset property functions shared between libzfs and kernel.
+ */
+//const char *zfs_prop_default_string(zfs_prop_t);
+//uint64_t zfs_prop_default_numeric(zfs_prop_t);
+boolean_t zfs_prop_readonly(zfs_prop_t);
+boolean_t zfs_prop_inheritable(zfs_prop_t);
+boolean_t zfs_prop_setonce(zfs_prop_t);
+//const char *zfs_prop_to_name(zfs_prop_t);
 zfs_prop_t zfs_name_to_prop(const char *);
+boolean_t zfs_prop_user(const char *);
+boolean_t zfs_prop_userquota(const char *);
+boolean_t zfs_prop_written(const char *);
+int zfs_prop_index_to_string(zfs_prop_t, uint64_t, const char **);
+int zfs_prop_string_to_index(zfs_prop_t, const char *, uint64_t *);
+uint64_t zfs_prop_random_value(zfs_prop_t, uint64_t seed);
+boolean_t zfs_prop_valid_for_type(int, zfs_type_t);
+
+/*
+ * Pool property functions shared between libzfs and kernel.
+ */
+zpool_prop_t zpool_name_to_prop(const char *);
+//const char *zpool_prop_to_name(zpool_prop_t);
+//const char *zpool_prop_default_string(zpool_prop_t);
+//uint64_t zpool_prop_default_numeric(zpool_prop_t);
+boolean_t zpool_prop_readonly(zpool_prop_t);
+boolean_t zpool_prop_feature(const char *);
+boolean_t zpool_prop_unsupported(const char *);
+int zpool_prop_index_to_string(zpool_prop_t, uint64_t, const char **);
+int zpool_prop_string_to_index(zpool_prop_t, const char *, uint64_t *);
+uint64_t zpool_prop_random_value(zpool_prop_t, uint64_t seed);
+
+
 ''')
 
 ffi.cdef('''

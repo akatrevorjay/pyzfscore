@@ -4,6 +4,7 @@
 from ._cffi import ffi
 from . import libzfs
 from .libzfs import zfs_type_t
+from . import libnvpair
 
 
 LZH = libzfs.libzfs_init()
@@ -124,9 +125,23 @@ class ZDatasetProperties(_ZBaseProperties):
     def _get(self, name, literal=False):
         """Gets dataset property.
         """
-        value = libzfs.zfs_prop_get(self._parent._handle, name, literal=literal)
-        # TODO source
-        source = None
+        if not libzfs.zfs_prop_user(name):
+            value = libzfs.zfs_prop_get(self._parent._handle, name, literal=literal)
+            # TODO source
+            source = None
+        else:
+            # TODO how to get a single userprop?
+            nvl = libzfs.zfs_get_user_props(self._parent._handle)
+            nvl = libnvpair.NVList.from_nvlist_p(nvl)
+            nvl_prop = nvl.lookup_nvlist(name)
+            if nvl_prop:
+                value = nvl_prop.lookup_string('value')
+                source = nvl_prop.lookup_string('source')
+
+                # TODO HACK THIS DOES NOT BELONG HERE AT ALL, MOVE TO PROP REPR
+                if source == self._parent.name:
+                    source = 'local'
+
         return ZDatasetProperty(self, name, value, source)
 
     def _set(self, name, value):
