@@ -28,7 +28,7 @@ class _ZBaseProperty(object):
         self._parent = parent
         self._dataset = parent._parent
         self.name = name
-        self._set(value, ignore=True)
+        self._set(value, _ignore=True)
         self.source = source
 
     def __repr__(self):
@@ -63,8 +63,8 @@ class _ZBaseProperty(object):
     def _get(self):
         return self._value
 
-    def _set(self, value, ignore=False):
-        if not ignore:
+    def _set(self, value, _ignore=False):
+        if not _ignore:
             self._parent._set(self.name, value)
         self._value = value
 
