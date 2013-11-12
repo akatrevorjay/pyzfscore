@@ -334,24 +334,25 @@ class ZSnapshot(ZDataset):
 
     @property
     def filesystem_name(self):
-        """ Returns the associated filesystem/volume name """
+        """ Get the associated filesystem/volume name. """
         return self.name.rsplit('@', 1)[0]
 
     parent_name = filesystem_name
 
     @property
     def filesystem_basename(self):
-        """ Returns the associated filesystem/volume name """
+        """ Get the associated filesystem/volume name. """
         return self.basename.rsplit('@', 1)[0]
 
     parent_basename = filesystem_basename
 
     @property
     def snapshot_name(self):
-        """ Returns the snapshot name """
+        """ Get snapshot name. """
         return self.basename.rsplit('@', 1)[1]
 
     def destroy(self, defer=True, recursive=False):
+        """ Destroy snapshot. """
         if not recursive:
             return super(ZSnapshot, self).destroy(defer=defer)
         else:
@@ -360,11 +361,13 @@ class ZSnapshot(ZDataset):
                                             self.snapshot_name,
                                             defer)
 
-    def hold(self, tag):
+    def hold(self, tag, recursive=False):
+        """ Hold snapshot. """
         # TODO Hold snapshot
         raise NotImplementedError
 
-    def release(self, tag):
+    def release(self, tag, recursive=False):
+        """ Release snapshot. """
         # TODO Release snapshot
         raise NotImplementedError
 
