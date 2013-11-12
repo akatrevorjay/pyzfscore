@@ -32,7 +32,10 @@ class _ZBaseProperty(object):
         self.source = source
 
     def __repr__(self):
-        return "%s('%s'='%s' src='%s')" % (self.__class__.__name__, self.name, self.value, self.source)
+        return "%s('%s'='%s' src='%s')" % (self.__class__.__name__,
+                                           self.name,
+                                           self.value,
+                                           self.source)
 
     def __unicode__(self):
         return unicode(self.value)
