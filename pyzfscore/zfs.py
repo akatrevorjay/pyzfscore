@@ -71,11 +71,6 @@ class _ZBaseProperty(object):
     value = property(_get, _set)
 
 
-class ZDatasetProperty(_ZBaseProperty):
-
-    """ Dataset Property object. """
-
-
 class _ZBaseProperties(object):
 
     """ Base Properties object. """
@@ -109,6 +104,11 @@ class _ZBaseProperties(object):
         """ Delete dataset property. """
         # TODO raise KeyError on non existent
         return self._inherit(k)
+
+
+class ZDatasetProperty(_ZBaseProperty):
+
+    """ Dataset Property object. """
 
 
 class ZDatasetProperties(_ZBaseProperties):
@@ -360,9 +360,43 @@ class ZSnapshot(ZDataset):
                                             self.snapshot_name,
                                             defer)
 
+    def hold(self, tag):
+        # TODO Hold snapshot
+        raise NotImplementedError
+
+    def release(self, tag):
+        # TODO Release snapshot
+        raise NotImplementedError
+
+
+class ZPoolProperty(_ZBaseProperty):
+
+    """ Pool Property object. """
+
+
+class ZPoolProperties(_ZBaseProperties):
+
+    """ Storage Pool Properties object. """
+
+    def _get(self, name, literal=False):
+        """Get dataset property."""
+        raise NotImplementedError
+
+    def _set(self, name, value):
+        """Set Pool property."""
+        raise NotImplementedError
+
+    # TODO Delete item == inherit property
+    def _inherit(self, k):
+        """Inherit property from parents."""
+        raise NotImplementedError
+
 
 class ZPool(_ZBase):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_POOL
+
+    def __init__(self):
+        self.props = ZPoolProperties(self)
 
     @classmethod
     def iter(cls):
