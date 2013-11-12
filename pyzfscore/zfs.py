@@ -21,28 +21,18 @@ class _ZBase(object):
 
 
 class _ZBaseProperty(object):
-    """Base Property object
-    """
+
+    """ Base Property object. """
 
     def __init__(self, parent, name, value, source):
         self._parent = parent
+        self._dataset = parent._parent
         self.name = name
         self._set(value, ignore=True)
         self.source = source
 
     def __repr__(self):
-        prefix = ''
-        source = ''
-        if self.source == '-':
-            prefix += 'Statistic'
-        elif self.source in ['default', 'local']:
-            prefix += self.source.capitalize()
-        elif self.source:
-            prefix += 'Inherited'
-            source = ' source=%s' % self.source
-
-        name = prefix + self.__class__.__name__
-        return "%s(%s=%s%s)" % (name, self.name, self.value, source)
+        return "%s('%s'='%s' src='%s')" % (self.__class__.__name__, self.name, self.value, self.source)
 
     def __unicode__(self):
         return unicode(self.value)
@@ -56,6 +46,8 @@ class _ZBaseProperty(object):
             return True
         elif value == 'off':
             return False
+        else:
+            return bool(value)
 
     #def __nonzero__(self):
     #    value = self.value
@@ -63,6 +55,10 @@ class _ZBaseProperty(object):
     #        return True
     #    elif value:
     #        return False
+
+    @property
+    def is_local(self):
+        return self.source == self._dataset.name
 
     def _get(self):
         return self._value
@@ -76,14 +72,13 @@ class _ZBaseProperty(object):
 
 
 class ZDatasetProperty(_ZBaseProperty):
-    """Dataset Property object
-    """
-    pass
+
+    """ Dataset Property object. """
 
 
 class _ZBaseProperties(object):
-    """Base Properties object
-    """
+
+    """ Base Properties object. """
 
     def __init__(self, parent):
         self._parent = parent
@@ -91,7 +86,7 @@ class _ZBaseProperties(object):
     """ Magic """
 
     def __getitem__(self, k):
-        """Gets dataset property.
+        """Get dataset property.
 
         dataset = Dataset('dpool/carp')
         dataset.properties['alloc']
@@ -101,7 +96,7 @@ class _ZBaseProperties(object):
         return self._get(k)
 
     def __setitem__(self, k, v):
-        """Sets dataset property.
+        """Set dataset property.
 
         dataset = Dataset('dpool/carp')
         dataset.properties['readonly'] = 'on'
@@ -110,21 +105,18 @@ class _ZBaseProperties(object):
         # TODO return ValueError if not found
         return self._set(k, v)
 
-    # TODO Delete item
-    #def __delitem__(self, k):
-    #    """Deletes dataset property.
-    #    """
-    #    # TODO raise KeyError on non existent
-    #    return self._inherit(k)
+    def __delitem__(self, k):
+        """ Delete dataset property. """
+        # TODO raise KeyError on non existent
+        return self._inherit(k)
 
 
 class ZDatasetProperties(_ZBaseProperties):
-    """Storage Dataset Properties object
-    """
+
+    """ Storage Dataset Properties object. """
 
     def _get(self, name, literal=False):
-        """Gets dataset property.
-        """
+        """Get dataset property."""
         if not libzfs.zfs_prop_user(name):
             value = libzfs.zfs_prop_get(self._parent._handle, name, literal=literal)
             # TODO source
@@ -137,23 +129,17 @@ class ZDatasetProperties(_ZBaseProperties):
             if nvl_prop:
                 value = nvl_prop.lookup_string('value')
                 source = nvl_prop.lookup_string('source')
-
-                # TODO HACK THIS DOES NOT BELONG HERE AT ALL, MOVE TO PROP REPR
-                if source == self._parent.name:
-                    source = 'local'
-
         return ZDatasetProperty(self, name, value, source)
 
     def _set(self, name, value):
-        """Sets Dataset property.
-        """
+        """Set Dataset property."""
         ret = libzfs.zfs_prop_set(self._parent._handle, name, value)
         return ret
 
     # TODO Delete item == inherit property
-    #def _inherit(self, k):
-    #    """Inherits property from parents
-    #    """
+    def _inherit(self, k):
+        """Inherit property from parents."""
+        raise NotImplementedError
 
 
 class ZDataset(_ZBase):
