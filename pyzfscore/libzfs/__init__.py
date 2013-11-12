@@ -153,17 +153,26 @@ and are found in sys/fs/zfs.h """
 """ zfs dataset property management """
 
 
-def zfs_prop_get(zhp, prop, source=ffi.NULL, stat=ffi.NULL, literal=False):
-    propbuf = ffi.new('char *')
+def zfs_prop_get(zhp, prop, literal=False):
+    value = ffi.new('char *')
+    sourcetype = ffi.new('zprop_source_t *')
+    source = ffi.new('char *')
     literal = boolean_t(literal)
 
     # This probably doesn't belong here..
     if isinstance(prop, str):
         prop = czfs.zfs_name_to_prop(prop)
 
-    rv = czfs.zfs_prop_get(zhp, prop, propbuf, ffi.sizeof(propbuf), source, stat, ffi.sizeof(stat), literal)
+    rv = czfs.zfs_prop_get(zhp, prop,
+                           value, ffi.sizeof(value),
+                           sourcetype,
+                           source, ffi.sizeof(source),
+                           literal)
     if not bool(rv):
-        return ffi.string(propbuf)
+        value = ffi.string(value)
+        sourcetype = zprop_source_t[sourcetype[0]]
+        source = ffi.string(source)
+        return (value, sourcetype, source)
 
 
 def zfs_prop_set(zhp, prop, value):
@@ -182,6 +191,29 @@ def zfs_get_user_props(zhp):
 def zfs_get_user_props_dump(zhp):
     nv = zfs_get_user_props(zhp)
     return libnvpair.dump_nvlist(nv, 0)
+
+
+# TODO Is this needed?
+def zfs_get_user_prop(zhp, name):
+    nvl = zfs_get_user_props(zhp)
+    nvl = libnvpair.NVList.from_nvlist_p(nvl)
+
+    nvp = nvl.lookup_nvlist(name)
+    if not nvp:
+        return
+
+    value = nvp.lookup_string('value')
+    source = nvp.lookup_string('source')
+
+    if source == zfs_get_name(zhp):
+        sourcetype = zprop_source_t.ZPROP_SRC_LOCAL
+    # TODO what is the value for received user prop?
+    # It's $recvd in sys/fs/zfs.h
+    #elif source == '$recv':
+    else:
+        sourcetype = zprop_source_t.ZPROP_SRC_INHERITED
+
+    return (value, sourcetype, source)
 
 
 # TODO move this

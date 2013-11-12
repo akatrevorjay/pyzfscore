@@ -763,5 +763,4 @@ int zpool_fru_set(zpool_handle_t *, uint64_t, const char *);
 */
 ''')
 
-
 czfs = _cffi.verify(ffi)

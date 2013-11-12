@@ -25,17 +25,27 @@ class _ZBaseProperty(object):
 
     """ Base Property object. """
 
-    def __init__(self, parent, name, value, source):
+    def __init__(self, parent, name, value, sourcetype, source):
         self._parent = parent
         self.name = name
         self._value = value
+        self.sourcetype = sourcetype
         self.source = source
 
     def __repr__(self):
-        return "%s(%s=%s src=%s)" % (self.__class__.__name__,
-                                     self.name,
-                                     self.value,
-                                     self.source)
+        return "%s(%s=%s sourcetype=%s source=%s)" % (self.__class__.__name__,
+                                                      self.name,
+                                                      self.value,
+                                                      self.sourcetype_str,
+                                                      self.source)
+
+    _sourcetype_str = None
+
+    @property
+    def sourcetype_str(self):
+        if not self._sourcetype_str:
+            self._sourcetype_str = self.sourcetype.name.split('ZPROP_SRC_')[1].lower()
+        return self._sourcetype_str
 
     def __unicode__(self):
         return unicode(self.value)
@@ -60,22 +70,44 @@ class _ZBaseProperty(object):
     #        return False
 
     def _parent_call(self, *args, **kwargs):
+        """Helper to call parent function of same name"""
         meth_name = get_func_name(frame=2)
         meth = getattr(self._parent, meth_name)
         return meth(*args, **kwargs)
 
-    def is_local(self):
-        #return self._parent_call(self.name)
-        return self.source == self._parent._parent.name
+    # Source type conditionals
 
+    @property
+    def is_local(self):
+        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_LOCAL
+
+    @property
+    def is_inherited(self):
+        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_INHERITED
+
+    @property
+    def is_received(self):
+        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_RECEIVED
+
+    @property
+    def is_default(self):
+        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_DEFAULT
+
+    # Conditionals
+
+    @property
     def is_readonly(self):
         return self._parent_call(self.name)
 
+    @property
     def is_user_prop(self):
         return self._parent_call(self.name)
 
+    @property
     def is_inheritable(self):
         return self._parent_call(self.name)
+
+    # Operations
 
     def inherit(self, received=False):
         return self._parent_call(self.name, received=received)
@@ -120,26 +152,14 @@ class ZDatasetProperties(_ZBaseProperties):
 
     def get(self, k, literal=False):
         """Get dataset property."""
-        value = None
-        source = None
-
         if not self.is_user_prop(k):
-            # Standard prop
-            value = libzfs.zfs_prop_get(self._parent._handle, k, literal=literal)
-            if not value:
-                raise KeyError
-            # TODO source
+            ret = libzfs.zfs_prop_get(self._parent._handle, k, literal=literal)
         else:
-            # User prop
-            nvl = libzfs.zfs_get_user_props(self._parent._handle)
-            nvl = libnvpair.NVList.from_nvlist_p(nvl)
-            nvl_prop = nvl.lookup_nvlist(k)
-            if not nvl_prop:
-                raise KeyError
-            value = nvl_prop.lookup_string('value')
-            source = nvl_prop.lookup_string('source')
-
-        return ZDatasetProperty(self, k, value, source)
+            ret = libzfs.zfs_get_user_prop(self._parent._handle, k)
+        if not ret:
+            raise KeyError
+        value, sourcetype, source = ret
+        return ZDatasetProperty(self, k, value, sourcetype, source)
 
     def set(self, k, value):
         """Set dataset property."""
