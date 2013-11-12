@@ -577,12 +577,11 @@ typedef struct zfs_allow {
 ''')
 """
 
-
-ffi.cdef('''
-typedef ... zfs_handle_t;
-typedef ... zpool_handle_t;
-typedef ... libzfs_handle_t;
-''')
+#ffi.cdef('''
+#typedef ... zfs_handle_t;
+#typedef ... zpool_handle_t;
+#typedef ... libzfs_handle_t;
+#''')
 
 """
 ffi.cdef('''

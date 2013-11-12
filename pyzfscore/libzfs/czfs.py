@@ -156,11 +156,9 @@ typedef struct zfs_allow {
 /*
  * Basic handle types
  */
-/*
 typedef struct zfs_handle zfs_handle_t;
 typedef struct zpool_handle zpool_handle_t;
 typedef struct libzfs_handle libzfs_handle_t;
-*/
 
 /*
  * Library initialization

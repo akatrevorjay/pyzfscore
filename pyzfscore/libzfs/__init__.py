@@ -178,7 +178,8 @@ def zfs_get_user_props(zhp):
     return czfs.zfs_get_user_props(zhp)
 
 
-def zfs_get_user_props_list(zhp):
+# TODO Temporary, not needed
+def zfs_get_user_props_dump(zhp):
     nv = zfs_get_user_props(zhp)
     return libnvpair.dump_nvlist(nv, 0)
 
@@ -186,6 +187,33 @@ def zfs_get_user_props_list(zhp):
 # TODO move this
 def zfs_prop_user(propname):
     return bool(czfs.zfs_prop_user(propname))
+
+
+def zfs_name_to_prop(name):
+    return czfs.zfs_name_to_prop(name)
+
+
+def zfs_ensure_prop(name_or_prop):
+    """ Convert prop to prop type int if needed """
+    if isinstance(name_or_prop, basestring):
+        name_or_prop = czfs.zfs_name_to_prop(name_or_prop)
+    return name_or_prop
+
+
+def zfs_prop_readonly(prop):
+    prop = zfs_ensure_prop(prop)
+    return bool(czfs.zfs_prop_readonly(prop))
+
+
+def zfs_prop_inheritable(prop):
+    prop = zfs_ensure_prop(prop)
+    return bool(czfs.zfs_prop_inheritable(prop))
+
+
+def zfs_prop_inherit(zhp, propname, received=False):
+    received = boolean_t(received)
+    rv = czfs.zfs_prop_inherit(zhp, propname, received)
+    return not bool(rv)
 
 
 """ Iterator functions """

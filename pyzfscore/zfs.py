@@ -5,6 +5,7 @@ from ._cffi import ffi
 from . import libzfs
 from .libzfs import zfs_type_t
 from . import libnvpair
+from .utils import get_func_name
 
 
 LZH = libzfs.libzfs_init()
@@ -26,16 +27,15 @@ class _ZBaseProperty(object):
 
     def __init__(self, parent, name, value, source):
         self._parent = parent
-        self._dataset = parent._parent
         self.name = name
-        self._set(value, _ignore=True)
+        self._value = value
         self.source = source
 
     def __repr__(self):
-        return "%s('%s'='%s' src='%s')" % (self.__class__.__name__,
-                                           self.name,
-                                           self.value,
-                                           self.source)
+        return "%s(%s=%s src=%s)" % (self.__class__.__name__,
+                                     self.name,
+                                     self.value,
+                                     self.source)
 
     def __unicode__(self):
         return unicode(self.value)
@@ -59,19 +59,34 @@ class _ZBaseProperty(object):
     #    elif value:
     #        return False
 
-    @property
-    def is_local(self):
-        return self.source == self._dataset.name
+    def _parent_call(self, *args, **kwargs):
+        meth_name = get_func_name(frame=2)
+        meth = getattr(self._parent, meth_name)
+        return meth(*args, **kwargs)
 
-    def _get(self):
+    def is_local(self):
+        #return self._parent_call(self.name)
+        return self.source == self._parent._parent.name
+
+    def is_readonly(self):
+        return self._parent_call(self.name)
+
+    def is_user_prop(self):
+        return self._parent_call(self.name)
+
+    def is_inheritable(self):
+        return self._parent_call(self.name)
+
+    def inherit(self, received=False):
+        return self._parent_call(self.name, received=received)
+
+    def get(self):
         return self._value
 
-    def _set(self, value, _ignore=False):
-        if not _ignore:
-            self._parent._set(self.name, value)
-        self._value = value
+    def set(self, v):
+        return self._parent_call(self.name, v)
 
-    value = property(_get, _set)
+    value = property(get, set)
 
 
 class _ZBaseProperties(object):
@@ -81,32 +96,17 @@ class _ZBaseProperties(object):
     def __init__(self, parent):
         self._parent = parent
 
-    """ Magic """
-
     def __getitem__(self, k):
-        """Get dataset property.
-
-        dataset = Dataset('dpool/carp')
-        dataset.properties['alloc']
-
-        """
-        # TODO return KeyError if not found
-        return self._get(k)
+        """Get property."""
+        raise NotImplementedError
 
     def __setitem__(self, k, v):
-        """Set dataset property.
-
-        dataset = Dataset('dpool/carp')
-        dataset.properties['readonly'] = 'on'
-
-        """
-        # TODO return ValueError if not found
-        return self._set(k, v)
+        """Set property."""
+        raise NotImplementedError
 
     def __delitem__(self, k):
-        """ Delete dataset property. """
-        # TODO raise KeyError on non existent
-        return self._inherit(k)
+        """Delete property."""
+        raise NotImplementedError
 
 
 class ZDatasetProperty(_ZBaseProperty):
@@ -118,30 +118,63 @@ class ZDatasetProperties(_ZBaseProperties):
 
     """ Storage Dataset Properties object. """
 
-    def _get(self, name, literal=False):
+    def get(self, k, literal=False):
         """Get dataset property."""
-        if not libzfs.zfs_prop_user(name):
-            value = libzfs.zfs_prop_get(self._parent._handle, name, literal=literal)
+        value = None
+        source = None
+
+        if not self.is_user_prop(k):
+            # Standard prop
+            value = libzfs.zfs_prop_get(self._parent._handle, k, literal=literal)
+            if not value:
+                raise KeyError
             # TODO source
-            source = None
         else:
-            # TODO how to get a single userprop?
+            # User prop
             nvl = libzfs.zfs_get_user_props(self._parent._handle)
             nvl = libnvpair.NVList.from_nvlist_p(nvl)
-            nvl_prop = nvl.lookup_nvlist(name)
-            if nvl_prop:
-                value = nvl_prop.lookup_string('value')
-                source = nvl_prop.lookup_string('source')
-        return ZDatasetProperty(self, name, value, source)
+            nvl_prop = nvl.lookup_nvlist(k)
+            if not nvl_prop:
+                raise KeyError
+            value = nvl_prop.lookup_string('value')
+            source = nvl_prop.lookup_string('source')
 
-    def _set(self, name, value):
-        """Set Dataset property."""
-        ret = libzfs.zfs_prop_set(self._parent._handle, name, value)
+        return ZDatasetProperty(self, k, value, source)
+
+    def set(self, k, value):
+        """Set dataset property."""
+        if self.is_readonly(k):
+            raise ValueError("Property %s is readonly" % k)
+
+        ret = libzfs.zfs_prop_set(self._parent._handle, k, value)
         return ret
 
-    # TODO Delete item == inherit property
-    def _inherit(self, k):
-        """Inherit property from parents."""
+    def inherit(self, k, received=False):
+        if self.is_readonly(k):
+            raise KeyError("Property %s is readonly" % k)
+        elif not self.is_inheritable(k):
+            raise KeyError("Property %s is not inheritable" % k)
+
+        return libzfs.zfs_prop_inherit(self._parent._handle, k, received)
+
+    __getitem__ = get
+    __setitem__ = set
+    __delitem__ = inherit
+
+    def is_user_prop(self, k):
+        return libzfs.zfs_prop_user(k)
+
+    def is_readonly(self, k):
+        if self.is_user_prop(k):
+            return False
+        return libzfs.zfs_prop_readonly(k)
+
+    def is_inheritable(self, k):
+        if self.is_user_prop(k):
+            return True
+        return libzfs.zfs_prop_inheritable(k)
+
+    def is_local(self, k):
         raise NotImplementedError
 
 
@@ -384,18 +417,16 @@ class ZPoolProperties(_ZBaseProperties):
 
     """ Storage Pool Properties object. """
 
-    def _get(self, name, literal=False):
-        """Get dataset property."""
+    def get(self, name, literal=False):
+        """Get property."""
         raise NotImplementedError
 
-    def _set(self, name, value):
-        """Set Pool property."""
+    def set(self, name, value):
+        """Set property."""
         raise NotImplementedError
 
-    # TODO Delete item == inherit property
-    def _inherit(self, k):
-        """Inherit property from parents."""
-        raise NotImplementedError
+    __getitem__ = get
+    __setitem__ = set
 
 
 class ZPool(_ZBase):
