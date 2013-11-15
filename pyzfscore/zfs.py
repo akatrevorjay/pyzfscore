@@ -159,6 +159,12 @@ class ZDatasetProperties(_ZBaseProperties):
         if not ret:
             raise KeyError
         value, sourcetype, source = ret
+
+        # For consistency on source for local standard props to make them match
+        # up with user props; if local set source to dataset name
+        if not source and sourcetype == libzfs.zprop_source_t.ZPROP_SRC_LOCAL:
+            source = self._parent.name
+
         return ZDatasetProperty(self, k, value, sourcetype, source)
 
     def set(self, k, value):
