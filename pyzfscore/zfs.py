@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+"""pyzfscore.zfs -- zfs oo api."""
 
 from ._cffi import ffi
 from . import libzfs
