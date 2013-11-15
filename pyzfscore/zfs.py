@@ -176,6 +176,7 @@ class ZDatasetProperties(_ZBaseProperties):
         return ret
 
     def inherit(self, k, received=False):
+        """Inherit dataset property."""
         if self.is_readonly(k):
             raise KeyError("Property %s is readonly" % k)
         elif not self.is_inheritable(k):
@@ -188,20 +189,20 @@ class ZDatasetProperties(_ZBaseProperties):
     __delitem__ = inherit
 
     def is_user_prop(self, k):
+        """Check if specified prop name is a user property."""
         return libzfs.zfs_prop_user(k)
 
     def is_readonly(self, k):
+        """Check if specified prop name is read only."""
         if self.is_user_prop(k):
             return False
         return libzfs.zfs_prop_readonly(k)
 
     def is_inheritable(self, k):
+        """Check if specified prop name is inheritable."""
         if self.is_user_prop(k):
             return True
         return libzfs.zfs_prop_inheritable(k)
-
-    def is_local(self, k):
-        raise NotImplementedError
 
 
 class ZDataset(_ZBase):
@@ -287,7 +288,15 @@ class ZDataset(_ZBase):
             name = name.split('@', 1)[0]
         return name
 
-    def to_pool(self):
+    _pool = None
+
+    @property
+    def pool(self):
+        if not self._pool:
+            self._pool = self._to_pool()
+        return self._pool
+
+    def _to_pool(self):
         #return ZPool.open(self.pool_name)
         handle = libzfs.zfs_get_pool_handle(self._handle)
         return ZPool.from_handle(handle)
@@ -308,7 +317,15 @@ class ZDataset(_ZBase):
         if pname:
             return pname[-1]
 
-    def to_parent(self):
+    _parent = None
+
+    @property
+    def parent(self):
+        if not self._parent:
+            self._parent = self._to_parent()
+        return self._parent
+
+    def _to_parent(self):
         return ZDataset.open(self.parent_name)
 
     """ Dataset tests """
@@ -418,7 +435,8 @@ class ZSnapshot(ZDataset):
         if not recursive:
             return super(ZSnapshot, self).destroy(defer=defer)
         else:
-            parent = self.to_parent()
+            #parent = self._to_parent()
+            parent = self.parent
             return libzfs.zfs_destroy_snaps(parent._handle,
                                             self.snapshot_name,
                                             defer)
@@ -494,16 +512,41 @@ class ZPool(_ZBase):
 
     def _load(self):
         self.name = libzfs.zpool_get_name(self._handle)
-        self.active = self._is_active()
-        if self.active:
-            self.filesystem = self._to_filesystem()
-            self.state = self._get_state()
+        #self.active = self._is_active()
+        #if self.active:
+        #    self.filesystem = self._to_filesystem()
+        #    self.state = self._get_state()
+
+    _active = None
+
+    @property
+    def active(self):
+        if not self._active:
+            self._active = self._is_active()
+        return self._active
 
     def _is_active(self):
         return self._get_state() == 'ACTIVE'
 
+    _filesystem = None
+
+    @property
+    def filesystem(self):
+        if not self._filesystem:
+            self._filesystem = self._to_filesystem()
+        return self._filesystem
+
     def _to_filesystem(self):
+        assert self.active
         return ZFilesystem.open(self.name)
+
+    _state = None
+
+    @property
+    def state(self):
+        if not self._state:
+            self._state = self._get_state()
+        return self._state
 
     def _get_state(self):
         pool_state = libzfs.zpool_get_state(self._handle)
