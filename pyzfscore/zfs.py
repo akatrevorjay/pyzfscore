@@ -25,28 +25,6 @@ class _ZBaseProperty(object):
 
     """ Base Property object. """
 
-    def __init__(self, parent, name, value, sourcetype, source):
-        self._parent = parent
-        self.name = name
-        self._value = value
-        self.sourcetype = sourcetype
-        self.source = source
-
-    def __repr__(self):
-        return "%s(%s=%s sourcetype=%s source=%s)" % (self.__class__.__name__,
-                                                      self.name,
-                                                      self.value,
-                                                      self.sourcetype_str,
-                                                      self.source)
-
-    _sourcetype_str = None
-
-    @property
-    def sourcetype_str(self):
-        if not self._sourcetype_str:
-            self._sourcetype_str = self.sourcetype.name.split('ZPROP_SRC_')[1].lower()
-        return self._sourcetype_str
-
     def __unicode__(self):
         return unicode(self.value)
 
@@ -74,6 +52,63 @@ class _ZBaseProperty(object):
         meth_name = get_func_name(frame=2)
         meth = getattr(self._parent, meth_name)
         return meth(*args, **kwargs)
+
+    # Operations
+
+    def get(self):
+        return self._value
+
+    def set(self, v):
+        return self._parent_call(self.name, v)
+
+    value = property(get, set)
+
+
+class _ZBaseProperties(object):
+
+    """ Base Properties object. """
+
+    def __init__(self, parent):
+        self._parent = parent
+
+    def __getitem__(self, k):
+        """Get property."""
+        raise NotImplementedError
+
+    def __setitem__(self, k, v):
+        """Set property."""
+        raise NotImplementedError
+
+    def __delitem__(self, k):
+        """Delete property."""
+        raise NotImplementedError
+
+
+class ZDatasetProperty(_ZBaseProperty):
+
+    """ Dataset Property object. """
+
+    def __init__(self, parent, name, value, sourcetype, source):
+        self._parent = parent
+        self.name = name
+        self._value = value
+        self.sourcetype = sourcetype
+        self.source_name = source
+
+    def __repr__(self):
+        return "%s(%s=%s sourcetype=%s source=%s)" % (self.__class__.__name__,
+                                                      self.name,
+                                                      self.value,
+                                                      self.sourcetype_str,
+                                                      self.source_name)
+
+    _sourcetype_str = None
+
+    @property
+    def sourcetype_str(self):
+        if not self._sourcetype_str:
+            self._sourcetype_str = self.sourcetype.name.split('ZPROP_SRC_')[1].lower()
+        return self._sourcetype_str
 
     # Source type conditionals
 
@@ -112,38 +147,16 @@ class _ZBaseProperty(object):
     def inherit(self, received=False):
         return self._parent_call(self.name, received=received)
 
-    def get(self):
-        return self._value
+    _source = None
 
-    def set(self, v):
-        return self._parent_call(self.name, v)
+    @property
+    def source(self):
+        if not self._source:
+            self._source = self.to_source()
+        return self._source
 
-    value = property(get, set)
-
-
-class _ZBaseProperties(object):
-
-    """ Base Properties object. """
-
-    def __init__(self, parent):
-        self._parent = parent
-
-    def __getitem__(self, k):
-        """Get property."""
-        raise NotImplementedError
-
-    def __setitem__(self, k, v):
-        """Set property."""
-        raise NotImplementedError
-
-    def __delitem__(self, k):
-        """Delete property."""
-        raise NotImplementedError
-
-
-class ZDatasetProperty(_ZBaseProperty):
-
-    """ Dataset Property object. """
+    def to_source(self):
+        return ZDataset.open(self.source_name)
 
 
 class ZDatasetProperties(_ZBaseProperties):
@@ -162,7 +175,7 @@ class ZDatasetProperties(_ZBaseProperties):
 
         # For consistency on source for local standard props to make them match
         # up with user props; if local set source to dataset name
-        if not source and sourcetype == libzfs.zprop_source_t.ZPROP_SRC_LOCAL:
+        if not source and sourcetype is not libzfs.zprop_source_t.ZPROP_SRC_INHERITED:
             source = self._parent.name
 
         return ZDatasetProperty(self, k, value, sourcetype, source)
@@ -293,10 +306,10 @@ class ZDataset(_ZBase):
     @property
     def pool(self):
         if not self._pool:
-            self._pool = self._to_pool()
+            self._pool = self.to_pool()
         return self._pool
 
-    def _to_pool(self):
+    def to_pool(self):
         #return ZPool.open(self.pool_name)
         handle = libzfs.zfs_get_pool_handle(self._handle)
         return ZPool.from_handle(handle)
@@ -322,10 +335,10 @@ class ZDataset(_ZBase):
     @property
     def parent(self):
         if not self._parent:
-            self._parent = self._to_parent()
+            self._parent = self.to_parent()
         return self._parent
 
-    def _to_parent(self):
+    def to_parent(self):
         return ZDataset.open(self.parent_name)
 
     """ Dataset tests """
@@ -435,7 +448,7 @@ class ZSnapshot(ZDataset):
         if not recursive:
             return super(ZSnapshot, self).destroy(defer=defer)
         else:
-            #parent = self._to_parent()
+            #parent = self.to_parent()
             parent = self.parent
             return libzfs.zfs_destroy_snaps(parent._handle,
                                             self.snapshot_name,
@@ -514,7 +527,7 @@ class ZPool(_ZBase):
         self.name = libzfs.zpool_get_name(self._handle)
         #self.active = self._is_active()
         #if self.active:
-        #    self.filesystem = self._to_filesystem()
+        #    self.filesystem = self.to_filesystem()
         #    self.state = self._get_state()
 
     _active = None
@@ -533,10 +546,10 @@ class ZPool(_ZBase):
     @property
     def filesystem(self):
         if not self._filesystem:
-            self._filesystem = self._to_filesystem()
+            self._filesystem = self.to_filesystem()
         return self._filesystem
 
-    def _to_filesystem(self):
+    def to_filesystem(self):
         assert self.active
         return ZFilesystem.open(self.name)
 
