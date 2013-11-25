@@ -150,6 +150,69 @@ def zfs_get_pool_handle(zhp):
 """ Property management functions. Some functions are shared with the kernel,
 and are found in sys/fs/zfs.h """
 
+
+""" zpool property management """
+
+
+def zpool_get_prop(zhp, prop):
+    value = ffi.new('char *')
+    sourcetype = ffi.new('zprop_source_t *')
+
+    # This probably doesn't belong here..
+    prop = zpool_ensure_prop(prop)
+
+    rv = czfs.zpool_get_prop(zhp, prop,
+                             value, ffi.sizeof(value),
+                             sourcetype)
+
+    if not bool(rv):
+        value = ffi.string(value)
+        sourcetype = zprop_source_t[sourcetype[0]]
+        return (value, sourcetype)
+
+
+def zpool_set_prop(zhp, prop, value):
+    # TODO Check for retvals, this not bool() stuff may not actually work very well..
+    return not bool(czfs.zpool_set_prop(zhp, prop, value))
+
+
+def zpool_get_prop_literal(zhp, prop, literal=False):
+    value = ffi.new('char *')
+    sourcetype = ffi.new('zprop_source_t *')
+    source = ffi.new('char *')
+    literal = boolean_t(literal)
+
+    # This probably doesn't belong here..
+    prop = zpool_ensure_prop(prop)
+
+    rv = czfs.zpool_get_prop_literal(zhp, prop,
+                             value, ffi.sizeof(value),
+                             sourcetype,
+                             source, ffi.sizeof(source),
+                             literal)
+    if not bool(rv):
+        value = ffi.string(value)
+        sourcetype = zprop_source_t[sourcetype[0]]
+        source = ffi.string(source)
+        return (value, sourcetype, source)
+
+
+def zpool_name_to_prop(name):
+    return czfs.zpool_name_to_prop(name)
+
+
+def zpool_ensure_prop(name_or_prop):
+    """ Convert prop to prop type int if needed """
+    if isinstance(name_or_prop, basestring):
+        name_or_prop = czfs.zpool_name_to_prop(name_or_prop)
+    return name_or_prop
+
+
+def zpool_prop_readonly(prop):
+    prop = zpool_ensure_prop(prop)
+    return bool(czfs.zpool_prop_readonly(prop))
+
+
 """ zfs dataset property management """
 
 
@@ -160,8 +223,7 @@ def zfs_prop_get(zhp, prop, literal=False):
     literal = boolean_t(literal)
 
     # This probably doesn't belong here..
-    if isinstance(prop, str):
-        prop = czfs.zfs_name_to_prop(prop)
+    prop = zfs_ensure_prop(prop)
 
     rv = czfs.zfs_prop_get(zhp, prop,
                            value, ffi.sizeof(value),

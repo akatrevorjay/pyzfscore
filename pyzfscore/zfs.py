@@ -63,6 +63,40 @@ class _ZBaseProperty(object):
 
     value = property(get, set)
 
+    """ Common """
+
+    _sourcetype_str = None
+
+    @property
+    def sourcetype_str(self):
+        if not self._sourcetype_str:
+            self._sourcetype_str = self.sourcetype.name.split('ZPROP_SRC_')[1].lower()
+        return self._sourcetype_str
+
+    # Source type conditionals
+
+    @property
+    def is_local(self):
+        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_LOCAL
+
+    @property
+    def is_inherited(self):
+        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_INHERITED
+
+    @property
+    def is_received(self):
+        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_RECEIVED
+
+    @property
+    def is_default(self):
+        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_DEFAULT
+
+    # Conditionals
+
+    @property
+    def is_readonly(self):
+        return self._parent_call(self.name)
+
 
 class _ZBaseProperties(object):
 
@@ -102,37 +136,7 @@ class ZDatasetProperty(_ZBaseProperty):
                                                       self.sourcetype_str,
                                                       self.source_name)
 
-    _sourcetype_str = None
-
-    @property
-    def sourcetype_str(self):
-        if not self._sourcetype_str:
-            self._sourcetype_str = self.sourcetype.name.split('ZPROP_SRC_')[1].lower()
-        return self._sourcetype_str
-
-    # Source type conditionals
-
-    @property
-    def is_local(self):
-        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_LOCAL
-
-    @property
-    def is_inherited(self):
-        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_INHERITED
-
-    @property
-    def is_received(self):
-        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_RECEIVED
-
-    @property
-    def is_default(self):
-        return self.sourcetype == libzfs.zprop_source_t.ZPROP_SRC_DEFAULT
-
     # Conditionals
-
-    @property
-    def is_readonly(self):
-        return self._parent_call(self.name)
 
     @property
     def is_user_prop(self):
@@ -173,8 +177,9 @@ class ZDatasetProperties(_ZBaseProperties):
             raise KeyError
         value, sourcetype, source = ret
 
-        # For consistency on source for local standard props to make them match
-        # up with user props; if local set source to dataset name
+        # For consistency on source, in local prop scenarios, ensure source is
+        # set. Standard props do not always set source for local props, whereas
+        # user props do.
         if not source and sourcetype is not libzfs.zprop_source_t.ZPROP_SRC_INHERITED:
             source = self._parent.name
 
@@ -469,21 +474,50 @@ class ZPoolProperty(_ZBaseProperty):
 
     """ Pool Property object. """
 
+    def __init__(self, parent, name, value, sourcetype):
+        self._parent = parent
+        self.name = name
+        self._value = value
+        self.sourcetype = sourcetype
+
+    def __repr__(self):
+        return "%s(%s=%s sourcetype=%s)" % (self.__class__.__name__,
+                                            self.name,
+                                            self.value,
+                                            self.sourcetype_str)
+
 
 class ZPoolProperties(_ZBaseProperties):
 
     """ Storage Pool Properties object. """
 
-    def get(self, name, literal=False):
-        """Get property."""
-        raise NotImplementedError
+    def get(self, k, literal=False):
+        """Get dataset property."""
+        #ret = libzfs.zpool_get_prop_literal(self._parent._handle, k, literal=literal)
+        ret = libzfs.zpool_get_prop(self._parent._handle, k)
+        if not ret:
+            raise KeyError
+        value, sourcetype = ret
 
-    def set(self, name, value):
-        """Set property."""
-        raise NotImplementedError
+        return ZPoolProperty(self, k, value, sourcetype)
+
+    def set(self, k, value):
+        """Set dataset property."""
+        if self.is_readonly(k):
+            raise ValueError("Property %s is readonly" % k)
+
+        ret = libzfs.zpool_set_prop(self._parent._handle, k, value)
+        return ret
 
     __getitem__ = get
     __setitem__ = set
+
+    # TODO delitem delete set prop to '' or whathaveyou
+    #__delitem__ = inherit
+
+    def is_readonly(self, k):
+        """Check if specified prop name is read only."""
+        return libzfs.zpool_prop_readonly(k)
 
 
 class ZPool(_ZBase):

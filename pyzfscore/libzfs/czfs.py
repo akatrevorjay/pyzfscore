@@ -252,8 +252,13 @@ int zpool_label_disk(libzfs_handle_t *, zpool_handle_t *, char *);
 int zpool_set_prop(zpool_handle_t *, const char *, const char *);
 int zpool_get_prop(zpool_handle_t *, zpool_prop_t, char *,
     size_t proplen, zprop_source_t *);
+/*
+int zpool_get_prop_literal(zpool_handle_t *, zpool_prop_t, char *,
+    size_t proplen, zprop_source_t *, boolean_t literal);
+*/
 uint64_t zpool_get_prop_int(zpool_handle_t *, zpool_prop_t,
     zprop_source_t *);
+
 
 const char *zpool_prop_to_name(zpool_prop_t);
 const char *zpool_prop_values(zpool_prop_t);
