@@ -290,6 +290,7 @@ class ZDataset(_ZBase):
 
     def _load(self):
         self.name = libzfs.zfs_get_name(self._handle)
+        self.type = libzfs.zfs_get_type(self._handle)
 
     """ Path helpers """
 
