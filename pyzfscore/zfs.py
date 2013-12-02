@@ -8,6 +8,10 @@ from . import libnvpair
 from .utils import get_func_name
 
 
+__all__ = ['ZPool',
+           'ZDataset', 'ZVolume', 'ZFilesystem', 'ZSnapshot']
+
+
 LZH = libzfs.libzfs_init()
 
 
@@ -375,13 +379,15 @@ class ZDataset(_ZBase):
     """ Child iteration """
 
     @classmethod
-    def _children_iterator(cls, func, args):
+    def _children_iterator(cls, func, args, type_mask=zfs_type_t.ALL):
         children = []
 
         @libzfs.ffi.callback('zfs_iter_f')
         def _zfs_iter_cb(handle, arg=None):
-            c = cls.from_handle(handle)
-            children.append(c)
+            handle_type = libzfs.zfs_get_type(handle)
+            if handle_type & type_mask:
+                c = cls.from_handle(handle)
+                children.append(c)
             return 0
 
         args.append(_zfs_iter_cb)
@@ -392,8 +398,14 @@ class ZDataset(_ZBase):
     def iter_children(self):
         return self._children_iterator(libzfs.zfs_iter_children, [self._handle])
 
-    def iter_filesystems(self):
+    def iter_datasets(self):
         return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle])
+
+    def iter_filesystems(self):
+        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle], type_mask=ZFilesystem._zfs_type_mask)
+
+    def iter_volumes(self):
+        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle], type_mask=ZVolume._zfs_type_mask)
 
     def iter_snapshots_sorted(self):
         return self._children_iterator(libzfs.zfs_iter_snapshots_sorted, [self._handle])
