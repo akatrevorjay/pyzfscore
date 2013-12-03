@@ -229,6 +229,7 @@ class ZDatasetProperties(_ZBaseProperties):
 
 class ZDataset(_ZBase):
     _zfs_type_mask = zfs_type_t.DATASET
+    type_name = None
 
     def __init__(self):
         self.props = ZDatasetProperties(self)
@@ -431,14 +432,17 @@ class _SnapshottableZDataset:
 
 class ZFilesystem(ZDataset, _SnapshottableZDataset):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_FILESYSTEM
+    type_name = 'filesystem'
 
 
 class ZVolume(ZDataset, _SnapshottableZDataset):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_VOLUME
+    type_name = 'volume'
 
 
 class ZSnapshot(ZDataset):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_SNAPSHOT
+    type_name = 'snapshot'
 
     """ Path helpers """
 
@@ -535,6 +539,7 @@ class ZPoolProperties(_ZBaseProperties):
 
 class ZPool(_ZBase):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_POOL
+    type_name = 'pool'
 
     def __init__(self):
         self.props = ZPoolProperties(self)
