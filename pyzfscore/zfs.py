@@ -24,6 +24,15 @@ class _ZBase(object):
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, self.name)
 
+    def __key(self):
+        return self.name, self._zfs_type_mask
+
+    def __hash__(self):
+        return hash(self.__key())
+
+    def __eq__(self, other):
+        return self.__key() == other.__key()
+
 
 class _ZBaseProperty(object):
 
@@ -381,14 +390,17 @@ class ZDataset(_ZBase):
     """ Child iteration """
 
     @classmethod
-    def _children_iterator(cls, func, args, type_mask=zfs_type_t.ALL):
+    def _children_iterator(cls, func, args, type_mask=zfs_type_t.ALL, objectify=True):
         children = []
 
         @libzfs.ffi.callback('zfs_iter_f')
         def _zfs_iter_cb(handle, arg=None):
             handle_type = libzfs.zfs_get_type(handle)
             if handle_type & type_mask:
-                c = cls.from_handle(handle)
+                if objectify:
+                    c = cls.from_handle(handle)
+                else:
+                    c = libzfs.zfs_get_name(handle)
                 children.append(c)
             return 0
 
@@ -397,20 +409,28 @@ class ZDataset(_ZBase):
         func(*args)
         return children
 
-    def iter_children(self):
-        return self._children_iterator(libzfs.zfs_iter_children, [self._handle])
+    def iter_children(self, objectify=True):
+        return self._children_iterator(libzfs.zfs_iter_children, [self._handle],
+                                       objectify=objectify)
 
-    def iter_datasets(self):
-        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle])
+    def iter_datasets(self, objectify=True):
+        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle],
+                                       objectify=objectify)
 
-    def iter_filesystems(self):
-        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle], type_mask=ZFilesystem._zfs_type_mask)
+    def iter_filesystems(self, objectify=True):
+        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle],
+                                       type_mask=ZFilesystem._zfs_type_mask,
+                                       objectify=objectify)
 
-    def iter_volumes(self):
-        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle], type_mask=ZVolume._zfs_type_mask)
+    def iter_volumes(self, objectify=True):
+        # TODO Broken, returns filesystems???
+        return self._children_iterator(libzfs.zfs_iter_filesystems, [self._handle],
+                                       type_mask=ZVolume._zfs_type_mask,
+                                       objectify=objectify)
 
-    def iter_snapshots_sorted(self):
-        return self._children_iterator(libzfs.zfs_iter_snapshots_sorted, [self._handle])
+    def iter_snapshots_sorted(self, objectify=True):
+        return self._children_iterator(libzfs.zfs_iter_snapshots_sorted, [self._handle],
+                                       objectify=objectify)
 
     """ Dataset operations """
 
@@ -438,6 +458,11 @@ class ZFilesystem(ZDataset, _SnapshottableZDataset):
 class ZVolume(ZDataset, _SnapshottableZDataset):
     _zfs_type_mask = zfs_type_t.ZFS_TYPE_VOLUME
     type_name = 'volume'
+
+    @property
+    def device_path(self):
+        # TODO This is only valid for ZoL
+        return '/dev/zvol/%s' % self.name
 
 
 class ZSnapshot(ZDataset):
