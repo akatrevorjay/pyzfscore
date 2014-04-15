@@ -206,7 +206,7 @@ int zpool_iter(libzfs_handle_t *, zpool_iter_f, void *);
  */
 int zpool_create(libzfs_handle_t *, const char *, nvlist_t *,
     nvlist_t *, nvlist_t *);
-int zpool_destroy(zpool_handle_t *);
+int zpool_destroy(zpool_handle_t *, const char *);
 int zpool_add(zpool_handle_t *, nvlist_t *);
 
 typedef struct splitflags {
@@ -337,8 +337,8 @@ int zpool_get_errlog(zpool_handle_t *, nvlist_t **);
 /*
  * Import and export functions
  */
-int zpool_export(zpool_handle_t *, boolean_t);
-int zpool_export_force(zpool_handle_t *);
+int zpool_export(zpool_handle_t *, boolean_t, const char *);
+int zpool_export_force(zpool_handle_t *, const char *);
 int zpool_import(libzfs_handle_t *, nvlist_t *, const char *,
     char *altroot);
 int zpool_import_props(libzfs_handle_t *, nvlist_t *, const char *,
@@ -382,9 +382,6 @@ int zpool_upgrade(zpool_handle_t *, uint64_t);
 int zpool_get_history(zpool_handle_t *, nvlist_t **);
 int zpool_history_unpack(char *, uint64_t, uint64_t *,
     nvlist_t ***, uint_t *);
-void zpool_set_history_str(const char *subcommand, int argc,
-    char **argv, char *history_str);
-int zpool_stage_history(libzfs_handle_t *, const char *);
 int zpool_events_next(libzfs_handle_t *, nvlist_t **, int *, int, int);
 int zpool_events_clear(libzfs_handle_t *, int *);
 void zpool_obj_to_path(zpool_handle_t *, uint64_t, uint64_t, char *,
@@ -441,8 +438,6 @@ int zfs_prop_get_written(zfs_handle_t *zhp, const char *propname,
 int zfs_prop_get_feature(zfs_handle_t *zhp, const char *propname,
     char *buf, size_t len);
 */
-int zfs_get_snapused_int(zfs_handle_t *firstsnap, zfs_handle_t *lastsnap,
-    uint64_t *usedp);
 uint64_t getprop_uint64(zfs_handle_t *, zfs_prop_t, char **);
 uint64_t zfs_prop_get_int(zfs_handle_t *, zfs_prop_t);
 int zfs_prop_inherit(zfs_handle_t *, const char *, boolean_t);
@@ -561,7 +556,7 @@ int zfs_create(libzfs_handle_t *, const char *, zfs_type_t,
 int zfs_create_ancestors(libzfs_handle_t *, const char *);
 int zfs_destroy(zfs_handle_t *, boolean_t);
 int zfs_destroy_snaps(zfs_handle_t *, char *, boolean_t);
-int zfs_destroy_snaps_nvl(zfs_handle_t *, nvlist_t *, boolean_t);
+int zfs_destroy_snaps_nvl(libzfs_handle_t *, nvlist_t *, boolean_t);
 int zfs_clone(zfs_handle_t *, const char *, nvlist_t *);
 int zfs_snapshot(libzfs_handle_t *, const char *, boolean_t, nvlist_t *);
 int zfs_rollback(zfs_handle_t *, zfs_handle_t *, boolean_t);
@@ -602,8 +597,8 @@ int zfs_send(zfs_handle_t *, const char *, const char *,
     sendflags_t *, int, snapfilter_cb_t, void *, nvlist_t **);
 
 int zfs_promote(zfs_handle_t *);
-int zfs_hold(zfs_handle_t *, const char *, const char *, boolean_t,
-    boolean_t, boolean_t, int, uint64_t, uint64_t);
+int zfs_hold(zfs_handle_t *, const char *, const char *,
+    boolean_t, int);
 int zfs_release(zfs_handle_t *, const char *, const char *, boolean_t);
 int zfs_get_holds(zfs_handle_t *, nvlist_t **);
 uint64_t zvol_volsize_to_reservation(uint64_t, nvlist_t *);
