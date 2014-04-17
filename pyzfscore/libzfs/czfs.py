@@ -285,6 +285,7 @@ typedef enum {
 	ZPOOL_STATUS_IO_FAILURE_WAIT,	/* failed I/O, failmode 'wait' */
 	ZPOOL_STATUS_IO_FAILURE_CONTINUE, /* failed I/O, failmode 'continue' */
 	ZPOOL_STATUS_BAD_LOG,		/* cannot read log chain(s) */
+	ZPOOL_STATUS_ERRATA,		/* informational errata available */
 
 	/*
 	 * If the pool has unsupported features but can still be opened in
@@ -320,8 +321,10 @@ typedef enum {
 	ZPOOL_STATUS_OK
 } zpool_status_t;
 
-zpool_status_t zpool_get_status(zpool_handle_t *, char **);
-zpool_status_t zpool_import_status(nvlist_t *, char **);
+zpool_status_t zpool_get_status(zpool_handle_t *, char **,
+	zpool_errata_t *);
+zpool_status_t zpool_import_status(nvlist_t *, char **,
+    zpool_errata_t *);
 /*
 void zpool_dump_ddt(const ddt_stat_t *dds, const ddt_histogram_t *ddh);
 */
@@ -459,7 +462,8 @@ typedef struct zprop_list {
 	boolean_t	pl_fixed;
 } zprop_list_t;
 
-int zfs_expand_proplist(zfs_handle_t *, zprop_list_t **, boolean_t);
+int zfs_expand_proplist(zfs_handle_t *, zprop_list_t **, boolean_t,
+    boolean_t);
 void zfs_prune_proplist(zfs_handle_t *, uint8_t *);
 
 /*

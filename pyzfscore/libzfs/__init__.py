@@ -108,7 +108,8 @@ def zpool_iter(zhp, handler, arg=None):
 
 def zpool_get_status(zhp, arg=None):
     """Get status of zpool"""
-    return czfs.zpool_get_status(zhp, arg)
+    errata = ffi.new('zpool_errata_t')
+    return czfs.zpool_get_status(zhp, arg, errata)
 
 
 """

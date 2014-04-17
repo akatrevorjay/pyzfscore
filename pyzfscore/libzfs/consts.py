@@ -726,6 +726,7 @@ ffi.cdef('typedef enum pool_state { ... } pool_state_t;')
 ffi.cdef('typedef enum pool_scan_func { ... } pool_scan_func_t;')
 ffi.cdef('typedef enum zio_type { ... } zio_type_T;')
 ffi.cdef('typedef enum pool_scan_stat { ... } pool_scan_stat_t;')
+ffi.cdef('typedef enum zpool_errata { ... } zpool_errata_t;')
 ffi.cdef('typedef enum vdev_stat { ... } vdev_stat_t;')
 ffi.cdef('typedef enum zfs_ioc { ... } zfs_ioc_t;')
 
