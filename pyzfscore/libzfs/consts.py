@@ -227,6 +227,11 @@ zfs_prop_t = IntEnum('zfs_prop_t', [
     'ZFS_PROP_INCONSISTENT',		# not exposed to the userg
     'ZFS_PROP_SNAPDEV',
     'ZFS_PROP_ACLTYPE',
+    'ZFS_PROP_SELINUX_CONTEXT',
+    'ZFS_PROP_SELINUX_FSCONTEXT',
+    'ZFS_PROP_SELINUX_DEFCONTEXT',
+    'ZFS_PROP_SELINUX_ROOTCONTEXT',
+    'ZFS_PROP_RELATIME',
     'ZFS_NUM_PROPS',
 ], start=0)
 
@@ -306,6 +311,11 @@ typedef enum {
 	ZFS_PROP_INCONSISTENT,		/* not exposed to the user */
 	ZFS_PROP_SNAPDEV,
 	ZFS_PROP_ACLTYPE,
+	ZFS_PROP_SELINUX_CONTEXT,
+	ZFS_PROP_SELINUX_FSCONTEXT,
+	ZFS_PROP_SELINUX_DEFCONTEXT,
+	ZFS_PROP_SELINUX_ROOTCONTEXT,
+	ZFS_PROP_RELATIME,
 	ZFS_NUM_PROPS
 } zfs_prop_t;
 ''')
@@ -726,6 +736,7 @@ ffi.cdef('typedef enum pool_state { ... } pool_state_t;')
 ffi.cdef('typedef enum pool_scan_func { ... } pool_scan_func_t;')
 ffi.cdef('typedef enum zio_type { ... } zio_type_T;')
 ffi.cdef('typedef enum pool_scan_stat { ... } pool_scan_stat_t;')
+ffi.cdef('typedef enum zpool_errata { ... } zpool_errata_t;')
 ffi.cdef('typedef enum vdev_stat { ... } vdev_stat_t;')
 ffi.cdef('typedef enum zfs_ioc { ... } zfs_ioc_t;')
 
