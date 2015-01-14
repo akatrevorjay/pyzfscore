@@ -1,4 +1,3 @@
-
 import pyzfscore
 from pyzfscore import _cffi, libzfs, zfs, libnvpair
 from pyzfscore.libnvpair import *
