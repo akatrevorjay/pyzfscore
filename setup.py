@@ -20,15 +20,16 @@ setup(
     maintainer='Trevor Joynson',
     maintainer_email='github@skywww.net',
     url='http://github.com/akatrevorjay/pyzfscore',
-    packages=['pyzfscore',
-              'pyzfscore.libzfs',
-              'pyzfscore.flufl',
-              'pyzfscore.flufl.enum',
-              ],
-    #use_2to3=True,
-
+    packages=[
+        'pyzfscore',
+        'pyzfscore.libzfs',
+        'pyzfscore.flufl',
+        'pyzfscore.flufl.enum',
+    ],
+    install_requires=['cffi'],
     zip_safe=False,
-    ext_modules=[pyzfscore.libzfs.ffi.verifier.get_extension(),
-                 pyzfscore.libnvpair.ffi.verifier.get_extension(),
-                 ],
+    ext_modules=[
+        pyzfscore.libzfs.ffi.verifier.get_extension(),
+        pyzfscore.libnvpair.ffi.verifier.get_extension(),
+    ],
 )
