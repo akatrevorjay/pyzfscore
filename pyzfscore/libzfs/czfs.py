@@ -132,11 +132,12 @@ int zpool_destroy(zpool_handle_t *, const char *);
 int zpool_add(zpool_handle_t *, nvlist_t *);
 
 typedef struct splitflags {
-	/* do not split, but return the config that would be split off */
-	int dryrun : 1;
+    /* do not split, but return the config that would be split off */
+    int dryrun : 1;
 
-	/* after splitting, import the pool */
-	int import : 1;
+    /* after splitting, import the pool */
+    int import : 1;
+    int name_flags;
 } splitflags_t;
 
 /*
@@ -489,33 +490,41 @@ int zfs_rollback(zfs_handle_t *, zfs_handle_t *, boolean_t);
 int zfs_rename(zfs_handle_t *, const char *, boolean_t, boolean_t);
 
 typedef struct sendflags {
-	/* print informational messages (ie, -v was specified) */
-	boolean_t verbose;
+    /* print informational messages (ie, -v was specified) */
+    boolean_t verbose;
 
-	/* recursive send  (ie, -R) */
-	boolean_t replicate;
+    /* recursive send  (ie, -R) */
+    boolean_t replicate;
 
-	/* for incrementals, do all intermediate snapshots */
-	boolean_t doall;
+    /* for incrementals, do all intermediate snapshots */
+    boolean_t doall;
 
-	/* if dataset is a clone, do incremental from its origin */
-	boolean_t fromorigin;
+    /* if dataset is a clone, do incremental from its origin */
+    boolean_t fromorigin;
 
-	/* do deduplication */
-	boolean_t dedup;
+    /* do deduplication */
+    boolean_t dedup;
 
-	/* send properties (ie, -p) */
-	boolean_t props;
+    /* send properties (ie, -p) */
+    boolean_t props;
 
-	/* do not send (no-op, ie. -n) */
-	boolean_t dryrun;
+    /* do not send (no-op, ie. -n) */
+    boolean_t dryrun;
 
-	/* parsable verbose output (ie. -P) */
-	boolean_t parsable;
+    /* parsable verbose output (ie. -P) */
+    boolean_t parsable;
 
-	/* show progress (ie. -v) */
-	boolean_t progress;
+    /* show progress (ie. -v) */
+    boolean_t progress;
+
+    /* large blocks (>128K) are permitted */
+    boolean_t largeblock;
+
+    /* WRITE_EMBEDDED records of type DATA are permitted */
+    boolean_t embed_data;
 } sendflags_t;
+
+
 
 typedef boolean_t (snapfilter_cb_t)(zfs_handle_t *, void *);
 
@@ -645,7 +654,6 @@ int zfs_nicestrtonum(libzfs_handle_t *, const char *, uint64_t *);
 */
 
 int libzfs_run_process(const char *, char **, int flags);
-int libzfs_load_module(const char *);
 
 /*
  * Given a device or file, determine if it is part of a pool.
@@ -656,7 +664,7 @@ int zpool_in_use(libzfs_handle_t *, int, pool_state_t *, char **,
 /*
  * Label manipulation.
  */
-int zpool_read_label(int, nvlist_t **);
+int zpool_read_label(int, nvlist_t **, int *);
 int zpool_clear_label(int);
 
 /*

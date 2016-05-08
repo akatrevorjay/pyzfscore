@@ -182,14 +182,14 @@ zfs_prop_t = IntEnum('zfs_prop_t', [
     'ZFS_PROP_READONLY',
     'ZFS_PROP_ZONED',
     'ZFS_PROP_SNAPDIR',
-    'ZFS_PROP_PRIVATE',  # not exposed to user, temporaryg
+    'ZFS_PROP_PRIVATE',
     'ZFS_PROP_ACLINHERIT',
-    'ZFS_PROP_CREATETXG',  # not exposed to the userg
-    'ZFS_PROP_NAME',  # not exposed to the userg
+    'ZFS_PROP_CREATETXG',
+    'ZFS_PROP_NAME',
     'ZFS_PROP_CANMOUNT',
-    'ZFS_PROP_ISCSIOPTIONS',  # not exposed to the userg
+    'ZFS_PROP_ISCSIOPTIONS',
     'ZFS_PROP_XATTR',
-    'ZFS_PROP_NUMCLONES',  # not exposed to the userg
+    'ZFS_PROP_NUMCLONES',
     'ZFS_PROP_COPIES',
     'ZFS_PROP_VERSION',
     'ZFS_PROP_UTF8ONLY',
@@ -207,13 +207,13 @@ zfs_prop_t = IntEnum('zfs_prop_t', [
     'ZFS_PROP_USEDDS',
     'ZFS_PROP_USEDCHILD',
     'ZFS_PROP_USEDREFRESERV',
-    'ZFS_PROP_USERACCOUNTING',  # not exposed to the userg
-    'ZFS_PROP_STMF_SHAREINFO',  # not exposed to the userg
+    'ZFS_PROP_USERACCOUNTING',
+    'ZFS_PROP_STMF_SHAREINFO',
     'ZFS_PROP_DEFER_DESTROY',
     'ZFS_PROP_USERREFS',
     'ZFS_PROP_LOGBIAS',
-    'ZFS_PROP_UNIQUE',  # not exposed to the userg
-    'ZFS_PROP_OBJSETID',  # not exposed to the userg
+    'ZFS_PROP_UNIQUE',
+    'ZFS_PROP_OBJSETID',
     'ZFS_PROP_DEDUP',
     'ZFS_PROP_MLSLABEL',
     'ZFS_PROP_SYNC',
@@ -222,7 +222,11 @@ zfs_prop_t = IntEnum('zfs_prop_t', [
     'ZFS_PROP_CLONES',
     'ZFS_PROP_LOGICALUSED',
     'ZFS_PROP_LOGICALREFERENCED',
-    'ZFS_PROP_INCONSISTENT',  # not exposed to the userg
+    'ZFS_PROP_INCONSISTENT',
+    'ZFS_PROP_FILESYSTEM_LIMIT',
+    'ZFS_PROP_SNAPSHOT_LIMIT',
+    'ZFS_PROP_FILESYSTEM_COUNT',
+    'ZFS_PROP_SNAPSHOT_COUNT',
     'ZFS_PROP_SNAPDEV',
     'ZFS_PROP_ACLTYPE',
     'ZFS_PROP_SELINUX_CONTEXT',
@@ -230,6 +234,8 @@ zfs_prop_t = IntEnum('zfs_prop_t', [
     'ZFS_PROP_SELINUX_DEFCONTEXT',
     'ZFS_PROP_SELINUX_ROOTCONTEXT',
     'ZFS_PROP_RELATIME',
+    'ZFS_PROP_REDUNDANT_METADATA',
+    'ZFS_PROP_OVERLAY',
     'ZFS_NUM_PROPS',
 ], start=0)
 
@@ -265,14 +271,14 @@ typedef enum {
     ZFS_PROP_READONLY,
     ZFS_PROP_ZONED,
     ZFS_PROP_SNAPDIR,
-    ZFS_PROP_PRIVATE,		/* not exposed to user, temporary */
+    ZFS_PROP_PRIVATE,       /* not exposed to user, temporary */
     ZFS_PROP_ACLINHERIT,
-    ZFS_PROP_CREATETXG,		/* not exposed to the user */
-    ZFS_PROP_NAME,			/* not exposed to the user */
+    ZFS_PROP_CREATETXG,     /* not exposed to the user */
+    ZFS_PROP_NAME,          /* not exposed to the user */
     ZFS_PROP_CANMOUNT,
-    ZFS_PROP_ISCSIOPTIONS,		/* not exposed to the user */
+    ZFS_PROP_ISCSIOPTIONS,      /* not exposed to the user */
     ZFS_PROP_XATTR,
-    ZFS_PROP_NUMCLONES,		/* not exposed to the user */
+    ZFS_PROP_NUMCLONES,     /* not exposed to the user */
     ZFS_PROP_COPIES,
     ZFS_PROP_VERSION,
     ZFS_PROP_UTF8ONLY,
@@ -290,13 +296,13 @@ typedef enum {
     ZFS_PROP_USEDDS,
     ZFS_PROP_USEDCHILD,
     ZFS_PROP_USEDREFRESERV,
-    ZFS_PROP_USERACCOUNTING,	/* not exposed to the user */
-    ZFS_PROP_STMF_SHAREINFO,	/* not exposed to the user */
+    ZFS_PROP_USERACCOUNTING,    /* not exposed to the user */
+    ZFS_PROP_STMF_SHAREINFO,    /* not exposed to the user */
     ZFS_PROP_DEFER_DESTROY,
     ZFS_PROP_USERREFS,
     ZFS_PROP_LOGBIAS,
-    ZFS_PROP_UNIQUE,		/* not exposed to the user */
-    ZFS_PROP_OBJSETID,		/* not exposed to the user */
+    ZFS_PROP_UNIQUE,        /* not exposed to the user */
+    ZFS_PROP_OBJSETID,      /* not exposed to the user */
     ZFS_PROP_DEDUP,
     ZFS_PROP_MLSLABEL,
     ZFS_PROP_SYNC,
@@ -305,7 +311,11 @@ typedef enum {
     ZFS_PROP_CLONES,
     ZFS_PROP_LOGICALUSED,
     ZFS_PROP_LOGICALREFERENCED,
-    ZFS_PROP_INCONSISTENT,		/* not exposed to the user */
+    ZFS_PROP_INCONSISTENT,      /* not exposed to the user */
+    ZFS_PROP_FILESYSTEM_LIMIT,
+    ZFS_PROP_SNAPSHOT_LIMIT,
+    ZFS_PROP_FILESYSTEM_COUNT,
+    ZFS_PROP_SNAPSHOT_COUNT,
     ZFS_PROP_SNAPDEV,
     ZFS_PROP_ACLTYPE,
     ZFS_PROP_SELINUX_CONTEXT,
@@ -313,6 +323,8 @@ typedef enum {
     ZFS_PROP_SELINUX_DEFCONTEXT,
     ZFS_PROP_SELINUX_ROOTCONTEXT,
     ZFS_PROP_RELATIME,
+    ZFS_PROP_REDUNDANT_METADATA,
+    ZFS_PROP_OVERLAY,
     ZFS_NUM_PROPS
 } zfs_prop_t;
 ''')
@@ -359,7 +371,11 @@ zpool_prop_t = IntEnum('zpool_prop_t', [
     'ZPOOL_PROP_COMMENT',
     'ZPOOL_PROP_EXPANDSZ',
     'ZPOOL_PROP_FREEING',
-    'ZPOOL_NUM_PROPS',
+    'ZPOOL_PROP_FRAGMENTATION',
+    'ZPOOL_PROP_LEAKED',
+    'ZPOOL_PROP_MAXBLOCKSIZE',
+    'ZPOOL_PROP_TNAME',
+    'ZPOOL_NUM_PROPS'
 ], start=0)
 
 ffi.cdef('''
@@ -393,6 +409,10 @@ typedef enum {
     ZPOOL_PROP_COMMENT,
     ZPOOL_PROP_EXPANDSZ,
     ZPOOL_PROP_FREEING,
+    ZPOOL_PROP_FRAGMENTATION,
+    ZPOOL_PROP_LEAKED,
+    ZPOOL_PROP_MAXBLOCKSIZE,
+    ZPOOL_PROP_TNAME,
     ZPOOL_NUM_PROPS
 } zpool_prop_t;
 ''')
